@@ -58,5 +58,19 @@ const fields=['direction','height','power','warmth'];const read=id=>Number(docum
 for(const id of fields)document.getElementById(id).addEventListener('input',()=>{document.querySelectorAll('[data-preset]').forEach(b=>b.setAttribute('aria-pressed','false'));update();});
 const presets={daylight:[-45,55,70,0],raking:[-75,20,65,-12],evening:[60,35,45,70]};function setPreset(name){fields.forEach((id,i)=>document.getElementById(id).value=presets[name][i]);document.querySelectorAll('[data-preset]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.preset===name));update();}document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>setPreset(b.dataset.preset)));document.getElementById('reset').addEventListener('click',()=>setPreset('daylight'));
 let dragging=false;stage.addEventListener('pointerdown',e=>{dragging=true;stage.setPointerCapture(e.pointerId);});stage.addEventListener('pointermove',e=>{if(!dragging)return;const b=stage.getBoundingClientRect(),nx=(e.clientX-b.left)/b.width-.5,ny=(e.clientY-b.top)/b.height-.5;document.getElementById('direction').value=Math.atan2(nx,-ny)*180/Math.PI;document.getElementById('height').value=Math.round(85-Math.min(1,Math.hypot(nx,ny)*1.4)*65);document.querySelectorAll('[data-preset]').forEach(b=>b.setAttribute('aria-pressed','false'));update();});stage.addEventListener('pointerup',()=>dragging=false);stage.addEventListener('pointercancel',()=>dragging=false);
-function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h);const aspect=w/h,embedded=document.documentElement.classList.contains('hero-embed'),bleed=embedded?Number(new URLSearchParams(location.search).get('bleed')||0):0,halfHeight=embedded?5*h/Math.max(1,h-2*bleed):Math.max(5.3,10.35/aspect),centerX=embedded?0:.35;camera.left=-halfHeight*aspect+centerX;camera.right=halfHeight*aspect+centerX;camera.top=halfHeight;camera.bottom=-halfHeight;camera.position.set(0,0,33);camera.lookAt(0,0,0);camera.updateProjectionMatrix();document.getElementById("desk-objects").setAttribute("viewBox",`${camera.left} ${-camera.top} ${camera.right-camera.left} ${camera.top-camera.bottom}`);render();}new ResizeObserver(resize).observe(stage);document.getElementById('loading').remove();stage.dataset.ready='true';resize();update();rollout();
+function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h);const aspect=w/h,embedded=document.documentElement.classList.contains('hero-embed'),bleed=embedded?Number(new URLSearchParams(location.search).get('bleed')||0):0,halfHeight=embedded?5*h/Math.max(1,h-2*bleed):Math.max(5.3,10.35/aspect),centerX=embedded?0:.35;camera.left=-halfHeight*aspect+centerX;camera.right=halfHeight*aspect+centerX;camera.top=halfHeight;camera.bottom=-halfHeight;camera.position.set(0,0,33);camera.lookAt(0,0,0);camera.updateProjectionMatrix();document.getElementById("desk-objects").setAttribute("viewBox",`${camera.left} ${-camera.top} ${camera.right-camera.left} ${camera.top-camera.bottom}`);render();}new ResizeObserver(resize).observe(stage);document.getElementById('loading').remove();stage.dataset.ready='true';resize();update();
+// Preload the embedded scene, then unroll only after the parent's logo intro.
+let introRoot=null;
+try {
+  if(window.parent!==window&&document.documentElement.classList.contains('hero-embed'))introRoot=window.parent.document.documentElement;
+} catch {} // Standalone and cross-origin embeds start immediately.
+if(introRoot?.classList.contains('intro-pending')){
+  shapeRoll(0);render();
+  const revealObserver=new MutationObserver(()=>{
+    if(introRoot.classList.contains('intro-pending'))return;
+    revealObserver.disconnect();rollout();
+  });
+  revealObserver.observe(introRoot,{attributes:true,attributeFilter:['class']});
+  window.addEventListener('pagehide',()=>revealObserver.disconnect(),{once:true});
+}else rollout();
 } catch(error){document.getElementById('loading').textContent='This light study needs WebGL. Try opening it in a browser with hardware acceleration enabled.';console.error(error);}

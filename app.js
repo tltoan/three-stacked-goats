@@ -61,9 +61,3 @@ window.addEventListener('pagehide',event=>{if(!event.persisted)viewer?.dispose()
 const modelStage=$('#model-stage');
 container.addEventListener('journal-detail',event=>modelStage.classList.toggle('show-magnify',event.detail.visible));
 $('#close-journal-detail').addEventListener('click',()=>{viewer?.dismissDetail();$('#reset-view').focus({preventScroll:true});});
-
-// Start the hero scene when the logo intro has finished revealing the page.
-const heroFrame=document.getElementById('hero-workstation');
-function startHero(){if(!document.documentElement.classList.contains('intro-pending')&&!heroFrame.src)heroFrame.src=heroFrame.dataset.src;}
-const heroReveal=new MutationObserver(()=>{startHero();if(heroFrame.src)heroReveal.disconnect();});
-heroReveal.observe(document.documentElement,{attributes:true,attributeFilter:['class']});startHero();
