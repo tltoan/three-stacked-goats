@@ -2,17 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#e8e8e3">
-  <title>Three Stacked Goats — Everything in your mind, can fit inside your pocket</title>
+  <meta name="theme-color" content="#ffffff">
+  <title>Three Stacked Goats — Keep your interests close</title>
   <meta name="description" content="A passport size leather cased journal, with three refillable books.">
   <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./style.css?v=25">
+  <link rel="stylesheet" href="./style.css?v=38">
   <link rel="preload" href="./assets/geist-serif-regular.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="./assets/geist-mono.woff2" as="font" type="font/woff2" crossorigin>
   <script type="importmap">{"imports":{"three":"./assets/three.module.js","three/addons/controls/OrbitControls.js":"./assets/OrbitControls.js","three/addons/geometries/RoundedBoxGeometry.js":"./assets/RoundedBoxGeometry.js"}}</script>
   <script>if(!matchMedia("(prefers-reduced-motion: reduce)").matches)document.documentElement.classList.add("intro-pending");</script>
   <script type="module" src="./intro.js?v=5"></script>
-  <script type="module" src="./app.js?v=24"></script>
+  <script type="module" src="./app.js?v=33"></script>
+  <script type="module" src="./refill/app.js?v=3"></script>
 </head>
 <body class="journal-site">
   <div class="logo-intro" id="logo-intro" role="dialog" aria-modal="true" aria-label="Three Stacked Goats introduction">
@@ -22,22 +23,29 @@
   <div id="site-content">
   <a class="skip-link" href="#build">Skip to configurator</a>
   <header class="site-header">
-    <a class="wordmark" href="./" aria-label="Three Stacked Goats home"><img class="wordmark-icon" src="./assets/three-stacked-goats-sun.svg" alt="" width="28" height="56"><span>three-stacked-goats</span></a>
-    <nav aria-label="Main navigation"><a href="#story">The idea</a><a href="#paper">The paper</a><a href="#build" class="nav-action">Build yours <span aria-hidden="true">↗</span></a>
+    <a class="wordmark" href="./" aria-label="Three Stacked Goats home"><img class="wordmark-icon" src="./assets/figma/imgThreeStackedGoatsEditableVectorLogo.svg" alt="" width="28" height="56"><span>three-stacked-goats</span></a>
+    <nav aria-label="Main navigation"><a href="#story">The idea</a><a href="#paper">The paper</a><a href="#refills">Refill books</a><a href="#build" class="nav-action button primary">Build your journal <img src="./assets/figma/imgNotebook.svg" width="24" height="24" alt=""></a>
     </nav>
   </header>
   <main>
-    <div class="product-story">
-      <section class="intro">
+    <section class="workstation-hero" aria-label="Three Stacked Goats journal">
+      <section class="intro hero-copy">
         <div class="intro-main">
-          <h1>Everything in your mind, can fit inside your pocket.</h1>
+          <h1>Keep your interests close</h1>
           <p class="lead">A passport size leather cased journal, with three refillable books.</p>
-          <p class="product-price"><strong>$59</strong> <span>leather cover + three books</span></p>
-          <a class="button primary" href="#build">Build your journal <span aria-hidden="true">↗</span></a>
+          <p class="product-price"><span>leather cover + three books</span> <strong>$59</strong></p>
         </div>
       </section>
+      <div class="hero-scene"><iframe id="hero-workstation" title="Explore the journal — flip the pages" data-src="./workstation/?embed&amp;bleed=300" scrolling="no"></iframe></div>
+    </section>
+    <div class="product-story">
       <div class="model-stage" id="model-stage" data-ui>
-        <div class="stage-top"><button class="icon-button" id="reset-view" aria-label="Reset model view" title="Reset model view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 9a8 8 0 1 1 1 9M4 3v6h6"/></svg></button></div>
+        <div class="stage-top">
+          <button class="icon-button" id="reset-view" aria-label="Reset model view" title="Reset model view"><img src="./assets/figma/imgResetView.svg" width="20" height="20" alt=""></button>
+          <div id="journal-detail" class="journal-detail" role="group" aria-label="Brass detail zoom" aria-hidden="true">
+            <button id="close-journal-detail" class="journal-detail-close" type="button" aria-label="Close brass detail zoom" title="Close zoom"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+          </div>
+        </div>
         <div id="journal-viewer" role="img" aria-label="Interactive 3D journal concept. Closed size: 5 inches tall by 4 inches wide. Drag to rotate, or use arrow keys when focused." aria-busy="true" tabindex="0"></div>
         <p id="model-loading" role="status">Preparing your journal…</p>
         <div class="stage-bottom">
@@ -46,53 +54,90 @@
         </div>
       </div>
       <section class="configurator" id="build">
-        <h2>Make it yours.</h2>
+        <h2>Make it yours</h2>
         <p>Each book its own purpose.</p>
-        <fieldset class="leather-field"><legend><span class="cover-label">The cover <em>(cowhide leather)</em></span><span id="cover-name">Brown</span></legend><div class="leather-options" role="group" aria-label="Leather color">
-          <button class="leather-choice" data-leather="brown" aria-pressed="true"><span class="leather-sample brown"><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg></span><span>Brown</span></button>
-          <button class="leather-choice" data-leather="black" aria-pressed="false"><span class="leather-sample black"><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg></span><span>Black</span></button>
-          <button class="leather-choice" data-leather="olive" aria-pressed="false"><span class="leather-sample olive"><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg></span><span>Olive</span></button>
+        <fieldset class="leather-field"><legend><span class="cover-label">cover color</span><span id="cover-name">Brown</span></legend><div class="leather-options" role="group" aria-label="Leather color">
+          <button class="leather-choice" data-leather="brown" aria-pressed="true"><span class="leather-sample brown"><img class="check" src="./assets/figma/imgSelectedCheck.svg" width="24" height="24" alt=""></span><span>Brown</span></button>
+          <button class="leather-choice" data-leather="black" aria-pressed="false"><span class="leather-sample black"><img class="check" src="./assets/figma/imgSelectedCheck.svg" width="24" height="24" alt=""></span><span>Black</span></button>
+          <button class="leather-choice" data-leather="olive" aria-pressed="false"><span class="leather-sample olive"><img class="check" src="./assets/figma/imgSelectedCheck.svg" width="24" height="24" alt=""></span><span>Olive</span></button>
         </div></fieldset>
-        <div class="books-heading"><h3>The three books</h3><span>mix and match</span></div>
+        <div class="books-heading"><h3 class="sr-only">The three books</h3><span>mix and match</span></div>
         <div class="book-tabs" role="tablist" aria-label="Choose which book to customize">
           <button role="tab" id="book-tab-0" aria-selected="true" aria-controls="book-panel" data-book="0"><span>Book 1</span><small>Sketch</small></button>
           <button role="tab" id="book-tab-1" aria-selected="false" aria-controls="book-panel" data-book="1" tabindex="-1"><span>Book 2</span><small>Lined</small></button>
           <button role="tab" id="book-tab-2" aria-selected="false" aria-controls="book-panel" data-book="2" tabindex="-1"><span>Book 3</span><small>Dotted</small></button>
         </div>
         <div id="book-panel" role="tabpanel" aria-labelledby="book-tab-0">
-          <fieldset><legend>Paper format</legend><div class="format-options">
-            <button data-format="sketch" aria-pressed="true"><svg viewBox="0 0 40 46" aria-hidden="true"><rect x="7" y="3" width="26" height="38" rx="1"/></svg><span>Sketch</span></button>
-            <button data-format="lined" aria-pressed="false"><svg viewBox="0 0 40 46" aria-hidden="true"><rect x="7" y="3" width="26" height="38" rx="1"/><path d="M12 13h16M12 19h16M12 25h16M12 31h16"/></svg><span>Lined</span></button>
-            <button data-format="dotted" aria-pressed="false"><svg viewBox="0 0 40 46" aria-hidden="true"><rect x="7" y="3" width="26" height="38" rx="1"/><path stroke-linecap="round" stroke-width="2" stroke-dasharray=".1 6" d="M13 13h15M13 19h15M13 25h15M13 31h15"/></svg><span>Dotted</span></button>
+          <fieldset><legend>paper types</legend><div class="format-options">
+            <button data-format="sketch" aria-pressed="true"><img class="paper-icon sketch" src="./assets/figma/imgSketchPaper.svg" width="37" height="43" alt=""><span>Sketch</span></button>
+            <button data-format="lined" aria-pressed="false"><img class="paper-icon lined" src="./assets/figma/imgLinedPaper.svg" width="37" height="43" alt=""><span>Lined</span></button>
+            <button data-format="dotted" aria-pressed="false"><img class="paper-icon dotted" src="./assets/figma/imgDottedPaper.svg" width="37" height="43" alt=""><span>Dotted</span></button>
           </div></fieldset>
-          <fieldset class="paper-field"><legend>Paper color <span id="paper-color-name">Ivory</span></legend><div class="paper-options" role="group" aria-label="Paper color">
-            <button data-paper="ivory" aria-label="Ivory paper" aria-pressed="true"><span class="paper-dot ivory"></span><span>Ivory</span></button>
-            <button data-paper="blue" aria-label="Cobalt paper" aria-pressed="false"><span class="paper-dot blue"></span><span>Cobalt</span></button>
-            <button data-paper="black" aria-label="Charcoal paper" aria-pressed="false"><span class="paper-dot black"></span><span>Charcoal</span></button>
+          <fieldset class="paper-field"><legend class="sr-only">Paper color <span id="paper-color-name">Ivory</span></legend><div class="paper-options" role="group" aria-label="Paper color">
+            <button data-paper="ivory" aria-label="Ivory paper" aria-pressed="true"><span class="paper-swatch ivory"><img src="./assets/figma/imgSwatchContainer.svg" width="52" height="52" alt=""></span><span>Ivory</span></button>
+            <button data-paper="blue" aria-label="Cobalt paper" aria-pressed="false"><span class="paper-swatch blue"><img src="./assets/figma/imgSwatchContainer1.svg" width="52" height="40" alt=""></span><span>Cobalt</span></button>
+            <button data-paper="black" aria-label="Charcoal paper" aria-pressed="false"><span class="paper-swatch black"><img src="./assets/figma/imgSwatchContainer2.svg" width="52" height="40" alt=""></span><span>Charcoal</span></button>
           </div></fieldset>
           <div class="paper-preview-wrap"><canvas id="paper-preview" width="400" height="500" role="img" aria-label="Preview of ivory sketch paper"></canvas><div><h3 id="paper-title">For my artists.</h3><p id="paper-description">blank pages for sketches, loose thoughts, and ideas that don’t fit on a line.</p></div></div>
         </div>
-        <a class="mobile-preview-link" href="#model-stage">View your journal in 3D ↑</a><div class="combination"><h3>Your combination</h3><p id="combination-cover">Brown leather cover</p><ol id="combination-books"></ol><button class="button primary" id="save-config">Save your combination <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M5 17v4h14v-4"/></svg></button></div>
+        <a class="mobile-preview-link" href="#model-stage">View your journal in 3D ↑</a><div class="combination"><h3>Your combination</h3><p id="combination-cover">Brown leather cover</p><ol id="combination-books"></ol></div>
       </section>
-      <section class="paper-story" id="paper"><h2>A page for every part<br>of your day.</h2><p>A place to write, draw, and work it out.</p><div class="paper-story-list"><div><h3>Sketch</h3><p>Unprinted space for marks, drawings, and whatever comes next.</p></div><div><h3>Lined</h3><p>A familiar rhythm for daily entries and longer thoughts.</p></div><div><h3>Dotted</h3><p>A little structure for lists, layouts, and plans taking shape.</p></div></div></section>
+      <section class="paper-story" id="paper"><h2>A page for every part<br>of the day.</h2><p>to write, draw, and work it out.</p><div class="paper-story-list"><div><h3>Sketch</h3><p>Unprinted space for marks, drawings, and whatever comes next.</p></div><div><h3>Lined</h3><p>A familiar rhythm for daily entries and longer thoughts.</p></div><div><h3>Dotted</h3><p>A little structure for lists, layouts, and plans taking shape.</p></div></div></section>
     </div>
+    <section class="product-story refill-product" id="refills" aria-labelledby="refill-title">
+      <div class="model-stage" id="refill-model-stage">
+        <div class="stage-top"><button class="icon-button" id="refill-reset" aria-label="Reset refill pack view" title="Reset refill pack view" disabled><img src="./assets/figma/imgResetView.svg" width="20" height="20" alt=""></button></div>
+        <div id="refill-viewer" role="img" aria-label="Interactive 3D refill pack: three 5 by 4 inch kraft booklets with a charcoal cotton tie. Drag or use arrow keys to rotate." aria-busy="true" tabindex="0"></div>
+        <div id="refill-labels" class="book-labels" role="group" aria-label="Select a refill booklet" hidden>
+          <button data-refill-model-book="0" aria-pressed="true"><span>Book 1</span><strong>Blank</strong></button>
+          <button data-refill-model-book="1" aria-pressed="false"><span>Book 2</span><strong>Lined</strong></button>
+          <button data-refill-model-book="2" aria-pressed="false"><span>Book 3</span><strong>Dotted</strong></button>
+        </div>
+        <p id="refill-loading" role="status">Preparing your refill pack…</p>
+        <div class="stage-bottom">
+          <div class="model-caption"><span id="refill-view-status">Drag to explore</span></div>
+          <div class="view-switch" role="group" aria-label="Refill pack view"><button data-refill-view="pack" aria-pressed="true" disabled>Tied pack</button><button data-refill-view="booklets" aria-pressed="false" disabled>Open books</button></div>
+        </div>
+      </div>
+      <section class="configurator" id="refill-build" aria-labelledby="refill-title">
+        <p class="product-kicker">The refill pack</p>
+        <h2 id="refill-title">A fresh stack.</h2>
+        <p>Three new books for whatever comes next.</p>
+        <p class="product-price refill-price"><span>three refill books</span><strong data-refill-price>$10</strong></p>
+        <p class="refill-specs">5 × 4 inches. Flexible kraft covers, ivory pages, and a charcoal cotton tie.</p>
+        <div class="books-heading"><h3 class="sr-only">Customize your refill books</h3><span>mix and match</span></div>
+        <div class="book-tabs" role="tablist" aria-label="Choose a refill book to customize">
+          <button role="tab" id="refill-tab-0" aria-selected="true" aria-controls="refill-panel" data-refill-book="0"><span>Book 1</span><small>Blank</small></button>
+          <button role="tab" id="refill-tab-1" aria-selected="false" aria-controls="refill-panel" data-refill-book="1" tabindex="-1"><span>Book 2</span><small>Lined</small></button>
+          <button role="tab" id="refill-tab-2" aria-selected="false" aria-controls="refill-panel" data-refill-book="2" tabindex="-1"><span>Book 3</span><small>Dotted</small></button>
+        </div>
+        <div id="refill-panel" role="tabpanel" aria-labelledby="refill-tab-0">
+          <fieldset><legend>paper types</legend><div class="format-options">
+            <button data-refill-format="blank" aria-pressed="true"><img class="paper-icon sketch" src="./assets/figma/imgSketchPaper.svg" width="37" height="43" alt=""><span>Blank</span></button>
+            <button data-refill-format="lined" aria-pressed="false"><img class="paper-icon lined" src="./assets/figma/imgLinedPaper.svg" width="37" height="43" alt=""><span>Lined</span></button>
+            <button data-refill-format="dotted" aria-pressed="false"><img class="paper-icon dotted" src="./assets/figma/imgDottedPaper.svg" width="37" height="43" alt=""><span>Dotted</span></button>
+          </div></fieldset>
+          <div class="paper-preview-wrap"><canvas id="refill-paper-preview" width="400" height="500" role="img" aria-label="Blank ivory paper preview for Book 1"></canvas><div><h3 id="refill-paper-title">For my artists.</h3><p id="refill-paper-description">Open space for sketches, loose thoughts, and whatever comes next.</p></div></div>
+        </div>
+        <a class="mobile-preview-link" href="#refill-model-stage">View your refill pack in 3D ↑</a>
+        <div class="combination"><h3>Your refill pack</h3><p>Three books · <span data-refill-price>$10</span></p><ol id="refill-summary"></ol><button class="button primary" id="save-refill">Save your combination <span aria-hidden="true">↓</span></button><p class="save-note" id="refill-save-note">Your choices stay saved on this device.</p></div>
+        <p class="sr-only" id="refill-selection-status" role="status" aria-live="polite"></p>
+      </section>
+    </section>
     <section class="origin" id="story">
-      <div class="origin-intro"><h2>It starts with<br>carrying it.</h2><p>The everyday journal behind the idea: a simple cover, an elastic closure, and room for whatever needs a page. Three Stacked Goats takes that ritual and makes the inside yours.</p></div>
+      <div class="origin-intro"><h2>It starts with carrying it.</h2><p>I used to carry around 3 different note books, one for work, school, and art. I found it hard to keep up with all of it, and I liked to sketch on colored paper, but I couldn’t find any on the market for a multi color travelers journal.</p></div>
       <div id="paper-examples" class="reference-gallery" aria-label="Journal photo gallery">
-        <figure><img src="./assets/reference-cover.jpg" alt="The worn brown leather cover of my personal journal" width="1200" height="1600" loading="lazy"><figcaption>the cover that goes everywhere.</figcaption></figure>
-        <figure class="photo-short"><img src="./assets/reference-spine.jpg" alt="My journal spine showing its elastic and brass fitting" width="900" height="1200" loading="lazy"><figcaption>a simple, flexible spine.</figcaption></figure>
-        <figure class="photo-square"><img src="./assets/reference-inserts.jpg" alt="The open leather cover and a removable kraft-covered book" width="900" height="1200" loading="lazy"><figcaption>small books, held together.</figcaption></figure>
-        <figure class="photo-short"><img src="./assets/reference-pages.jpg" alt="An open sketchbook page in my personal journal" width="900" height="1200" loading="lazy"><figcaption>a place to put a thought.</figcaption></figure>
-        <figure><img src="./assets/paper-blue-01.jpg" alt="Cobalt blue journal pages with three white-ink fashion sketches" width="1086" height="1448" loading="lazy" decoding="async"><figcaption>white ink on cobalt blue.</figcaption></figure>
-        <figure><img src="./assets/paper-black-01.jpg" alt="Black journal pages with a white-ink storyboard sketch and handwritten notes" width="1086" height="1448" loading="lazy" decoding="async"><figcaption>a storyboard i recently did.</figcaption></figure>
-        <figure><img src="./assets/paper-blue-02.jpg" alt="Cobalt blue journal pages filled with white-ink coat and hat sketches" width="1086" height="1448" loading="lazy" decoding="async"><figcaption>cowboys on blue.</figcaption></figure>
-        <figure><div class="photo-rotated"><img src="./assets/paper-black-02.jpg" alt="Black journal pages with upright white-ink clothing and flower drawings" width="1086" height="1448" loading="lazy" decoding="async"></div><figcaption>white ink on black.</figcaption></figure>
+        <div class="gallery-column"><figure><img src="./assets/figma/imgPhoto.png" alt="The worn brown leather cover of my personal journal" width="1200" height="1600" loading="lazy"><figcaption>the cover that goes everywhere.</figcaption></figure><figure class="photo-short"><img src="./assets/figma/imgPhoto1.png" alt="My journal spine showing its elastic and brass fitting" width="900" height="1200" loading="lazy"><figcaption>a simple, flexible spine.</figcaption></figure></div>
+        <div class="gallery-column"><figure class="photo-square"><img src="./assets/figma/imgPhoto2.png" alt="The open leather cover and a removable kraft-covered book" width="900" height="1200" loading="lazy"><figcaption>small books, held together.</figcaption></figure><figure class="photo-short"><img src="./assets/figma/imgPhoto3.png" alt="An open sketchbook page in my personal journal" width="900" height="1200" loading="lazy"><figcaption>a place to put a thought.</figcaption></figure></div>
+        <div class="gallery-column"><figure><img src="./assets/figma/imgPhoto4.png" alt="Cobalt blue journal pages with three white-ink fashion sketches" width="1086" height="1448" loading="lazy" decoding="async"><figcaption>white ink on cobalt blue.</figcaption></figure><figure><img src="./assets/figma/imgPhoto5.png" alt="Black journal pages with a white-ink storyboard sketch and handwritten notes" width="1086" height="1448" loading="lazy" decoding="async"><figcaption>a storyboard i recently did.</figcaption></figure></div>
+        <div class="gallery-column"><figure><img src="./assets/figma/imgPhoto6.png" alt="Cobalt blue journal pages filled with white-ink coat and hat sketches" width="1086" height="1448" loading="lazy" decoding="async"><figcaption>cowboys on blue.</figcaption></figure><figure><div class="photo-rotated"><img src="./assets/figma/imgPhoto7.png" alt="Black journal pages with upright white-ink clothing and flower drawings" width="1086" height="1448" loading="lazy" decoding="async"></div><figcaption>white ink on black.</figcaption></figure></div>
+
       </div>
       <p class="note photo-note">photos from my first sample, and my personal book.</p>
     </section>
     <section class="faq"><h2>Some common questions</h2><div class="faq-items"><details><summary>Can I order one yet?<span aria-hidden="true">+</span></summary><p>Yess, you can pre-order. The 3D model shows what the product looks like, and I’ve included pictures of the final samples. Shipments will roll out after New Year’s.</p></details><details><summary>How small is the journal?<span aria-hidden="true">+</span></summary><p>As small as a passport, 5in x 4in. Made to be able to fit inside your pocket.</p></details><details><summary>Can all three books be different?<span aria-hidden="true">+</span></summary><p>Yurppppp, made for the multi-talented and faceted peeps out there.</p></details><details><summary>What is the cover made from?<span aria-hidden="true">+</span></summary><p>the cover is made from cowhide leather</p></details></div></section>
   </main>
-  <footer><a href="#" class="footer-brand" aria-label="Back to top">three stacked goats</a><div><span>© 2026 Three Stacked Goats.</span><a href="#build">Build yours ↑</a></div></footer>
+  <footer><a href="#" class="footer-brand" aria-label="Back to top">three stacked goats</a><div><span>© 2026 Three Stacked Goats.</span></div></footer>
   <div id="toast" role="status" aria-live="polite"></div>
   <noscript><div class="noscript">Enable JavaScript to customize the 3D model. You can still read the concept and <a href="./manufacturer.html">open the maker brief</a>.</div></noscript>
   </div>

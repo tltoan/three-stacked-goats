@@ -247,6 +247,53 @@ function makeLeatherWrap(materials) {
 }
 // Small cords pass through the hide's punched apertures. Their attachment points
 // follow the deformed surface; there is no separate structural spine component.
+// A height map presses the mark into the metal, rather than printing ink on it.
+export function engravedBrass(base, geometry) {
+  const material = base.clone();
+  const canvas = document.createElement('canvas'); canvas.width = 1024; canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 1024, 512);
+  const bump = new THREE.CanvasTexture(canvas);
+  bump.colorSpace = THREE.NoColorSpace; bump.anisotropy = 8;
+  material.bumpMap = bump; material.bumpScale = .001;
+  Promise.all([0].map(n => new Promise((resolve, reject) => {
+    const image = new Image(); image.onload = () => resolve(image); image.onerror = reject;
+    image.src = new URL('./assets/logo-dock-body.svg', import.meta.url).href;
+  }))).then(images => {
+    const ink = document.createElement('canvas'); ink.width = 534; ink.height = 1074;
+    const draw = ink.getContext('2d'); images.forEach(image => draw.drawImage(image, 0, 0, 534, 1074));
+    const data = draw.getImageData(0,0,534,1074).data;
+    let x0=534,y0=1074,x1=0,y1=0;
+    for(let y=0;y<1074;y++) for(let x=0;x<534;x++) if(data[(y*534+x)*4+3]>100){x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);}
+    // Cylinder circumference is about twice its height. Preserve the logo's
+    // proportions in physical space and leave a generous unmarked metal rim.
+    const height=410, width=height*(x1-x0+1)/(y1-y0+1);
+    ctx.drawImage(ink,x0,y0,x1-x0+1,y1-y0+1,512-width/2,51,width,height);
+    // Cut the actual sleeve surface inward. A softened mask makes a small
+    // bevel at the lip; recomputed normals let it catch the moving light.
+    const soft=document.createElement('canvas'); soft.width=1024; soft.height=512;
+    const sc=soft.getContext('2d'); sc.filter='blur(1.6px)'; sc.drawImage(canvas,0,0);
+    const heights=sc.getImageData(0,0,1024,512).data;
+    const position=geometry.attributes.position, uv=geometry.attributes.uv;
+    for(let i=0;i<position.count;i++){
+      const x=Math.min(1023,Math.round(uv.getX(i)*1023));
+      const y=Math.min(511,Math.round((1-uv.getY(i))*511));
+      const depth=(1-heights[(y*1024+x)*4]/255)*.006;
+      const px=position.getX(i),pz=position.getZ(i),r=Math.hypot(px,pz);
+      position.setXYZ(i,px*(r-depth)/r,position.getY(i),pz*(r-depth)/r);
+    }
+    position.needsUpdate=true; geometry.computeVertexNormals();
+    // The cavity remains brass, with restrained occlusion inside the cut.
+    const shade=document.createElement('canvas'); shade.width=1024; shade.height=512;
+    const sh=shade.getContext('2d'); sh.fillStyle='white'; sh.fillRect(0,0,1024,512);
+    sh.globalAlpha=.42; sh.drawImage(canvas,0,0);
+    const color=new THREE.CanvasTexture(shade); color.colorSpace=THREE.SRGBColorSpace;
+    material.map=color; material.needsUpdate=true;
+    ctx.clearRect(0,0,1024,512); ctx.drawImage(soft,0,0);
+    bump.needsUpdate=true;
+  }).catch(error => console.warn('Brass engraving unavailable', error));
+  return material;
+}
 function makeSpineDetails(wrap, materials) {
   const group = new THREE.Group(), paths = [], center = COVER.width + SPINE_LENGTH / 2;
   const outside = COVER.thickness / 2;
@@ -267,7 +314,9 @@ function makeSpineDetails(wrap, materials) {
   const loose = cord([[-.012,-.008,-.038],[.006,.008,0],[.15,.035,outside+.054],[.46,.24,outside+.085],[.64,.83,outside+.09],[.53,1.37,outside+.071],[.22,1.49,outside+.054],[-.024,.77,outside+.050],[.016,.013,0],[.012,.006,-.038]], .019, looseMaterial);
   const keeper = new THREE.Group(), keeperRadius = .065, keeperLength = .20;
   keeper.scale.z = .52;
-  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(keeperRadius,keeperRadius+.002,keeperLength,24,1,true), materials.brass);
+  const barrelGeometry = new THREE.CylinderGeometry(keeperRadius,keeperRadius+.002,keeperLength,512,192,true);
+  barrelGeometry.rotateY(Math.PI);
+  const barrel = new THREE.Mesh(barrelGeometry, engravedBrass(materials.brass, barrelGeometry));
   barrel.castShadow = barrel.receiveShadow = true; keeper.add(barrel);
   for (const end of [-1,1]) {
     const rim = new THREE.Mesh(new THREE.TorusGeometry(keeperRadius-.001,.003,8,24), materials.brass);
@@ -285,7 +334,7 @@ function makeSpineDetails(wrap, materials) {
     const p = wrap.point(center+.002,1.735,angle,outside+.027); keeper.position.set(p.x,p.y,p.z); keeper.rotation.y = Math.atan2(p.nx,p.nz); keeper.rotation.z = -.045;
   }
   function setClosure(amount) { looseMaterial.opacity = 1-amount; loose.visible = amount < .98; }
-  update(Math.PI); setClosure(1); return { group, update, setClosure };
+  update(Math.PI); setClosure(1); return { group, update, setClosure, keeper };
 }
 // Retaining elastics belong to the leather, not to the removable booklets.
 // Each installed booklet slips under a run at its center fold. The runs settle
@@ -350,7 +399,7 @@ function makeClosedClosure(wrap, material) {
   add(center-.012,-.008,outside-.009);
   return tube(points,.019,material);
 }
-function studioEnvironment(renderer) {
+function studioEnvironment(renderer, size = window.innerWidth <= 700 ? 512 : 1024) {
   const studio = new THREE.Scene(); studio.background = new THREE.Color('#383838');
   // Feathered, high-resolution softboxes keep reflected light continuous. The
   // material's fine normals supply the grain, not a low-resolution light edge.
@@ -366,7 +415,7 @@ function studioEnvironment(renderer) {
   addPanel([6,3], [0,7,-2], 2.4);
   addPanel([5,8], [3,-.5,-7], 4.5);
   const pmrem = new THREE.PMREMGenerator(renderer);
-  const result = pmrem.fromScene(studio, 0, .1, 40, { size: window.innerWidth <= 700 ? 512 : 1024 });
+  const result = pmrem.fromScene(studio, 0, .1, 40, { size });
   studio.traverse(o => { o.geometry?.dispose(); o.material?.dispose(); }); softbox.dispose(); pmrem.dispose(); return result;
 }
 export function createJournalViewer(container, initialState = {}) {
@@ -458,8 +507,8 @@ export function createJournalViewer(container, initialState = {}) {
     inserts.forEach((b,i)=>{const p=state.inserts[i]||{type:'sketch',color:'ivory'};b.pageMat.map=paperMap(p.type,p.color);b.pageMat.needsUpdate=true;b.edgeMat.color.set(PAPER[p.color]||PAPER.ivory);b.lineM.color.set(PAPER[p.color]||PAPER.ivory).multiplyScalar(p.color==='ivory'?.72:1.4);});
     updatePose(view==='open'&&!userMoved,media.matches);
   }
-  function setView(next){if(!['closed','open','exploded'].includes(next))return;view=next;userMoved=false;updatePose(true,media.matches);emit('journal-view',{view});}
-  function reset(){userMoved=false;updatePose(true,media.matches);}
+  function setView(next){if(!['closed','open','exploded'].includes(next))return;setDetailVisible(false);view=next;userMoved=false;updatePose(true,media.matches);emit('journal-view',{view});}
+  function reset(){detailDismissed=false;userMoved=false;updatePose(true,media.matches);}
   function resize(){const r=container.getBoundingClientRect();width=Math.max(1,r.width);height=Math.max(1,r.height);renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();if(!userMoved)frameCamera(true);}
   function updateDimensions(){
     if(view!=='closed'||Math.abs(fold-Math.PI)>.025){dimensions.update({visible:false});return;}
@@ -476,11 +525,56 @@ export function createJournalViewer(container, initialState = {}) {
     const facesCamera=faceNormal.dot(camera.position.clone().sub(frontCenter).normalize())>.2;
     dimensions.update({visible:facesCamera,points:[project(spine,half),project(spine,-half),project(STRIP_LENGTH,-half)],center,width,height});
   }
+  const detailHost=document.getElementById('journal-detail');
+  const detailRenderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+  detailRenderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  detailRenderer.setSize(122,107,false);
+  detailRenderer.outputColorSpace=renderer.outputColorSpace;detailRenderer.toneMapping=renderer.toneMapping;detailRenderer.toneMappingExposure=renderer.toneMappingExposure;
+  detailRenderer.setClearColor(0xdddcd6,0);detailHost?.append(detailRenderer.domElement);
+  detailRenderer.domElement.setAttribute('role','img');detailRenderer.domElement.setAttribute('aria-label','Live overhead close-up of the brass fitting. Follows the journal rotation.');
+  // Render-target textures belong to their WebGL context. Give the small
+  // preview its own environment so the brass retains its reflected light.
+  const detailEnvironment=studioEnvironment(detailRenderer,256);
+  const detailCamera=new THREE.PerspectiveCamera(31,122/107,.01,100);
+  const detailCenter=new THREE.Vector3(),detailDirection=new THREE.Vector3();
+  const detailOrbit=new THREE.Spherical(),viewerOrbit=new THREE.Spherical();
+  const homeOrbit=new THREE.Spherical().setFromVector3(new THREE.Vector3(3.25,1.5,9.7));
+  let detailVisible=false,detailDismissed=false;
+  function dismissDetail(){detailDismissed=true;setDetailVisible(false);}
+  function setDetailVisible(value){
+    if(detailVisible===value)return;
+    detailVisible=value;detailHost?.setAttribute('aria-hidden',String(!value));
+    emit('journal-detail',{visible:value});
+  }
+  function renderDetail(){
+    // OrbitControls rotates the main camera, not the book. Apply that same
+    // orbit change to this elevated camera, always aiming at the live fitting.
+    spineDetails.keeper.getWorldPosition(detailCenter);
+    viewerOrbit.setFromVector3(detailDirection.copy(camera.position).sub(controls.target));
+    detailDirection.set(.18,1.1,1).transformDirection(spineDetails.keeper.matrixWorld);
+    detailOrbit.setFromVector3(detailDirection);
+    const orbitTurn=viewerOrbit.theta-homeOrbit.theta;
+    // Follow the orbit within the fitting's outward-facing hemisphere. This
+    // stays continuous through full turns without disappearing into the hide.
+    detailOrbit.theta+=Math.atan2(Math.sin(orbitTurn),1.25+Math.cos(orbitTurn));
+    detailOrbit.phi=THREE.MathUtils.clamp(detailOrbit.phi+viewerOrbit.phi-homeOrbit.phi,.35,1);
+    detailDirection.setFromSpherical(detailOrbit);
+    detailCamera.position.copy(detailCenter).addScaledVector(detailDirection,.68);
+    detailCamera.up.copy(camera.up);
+    detailCamera.lookAt(detailCenter);
+    scene.environment=detailEnvironment.texture;
+    detailRenderer.render(scene,detailCamera);
+    scene.environment=env.texture;
+  }
   const onStart=()=>{cameraTween=false;userMoved=true;};controls.addEventListener('start',onStart);
   const onKey=event=>{if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)||![container,renderer.domElement].includes(event.target))return;event.preventDefault();onStart();const s=new THREE.Spherical().setFromVector3(camera.position.clone().sub(controls.target));if(event.key==='ArrowLeft')s.theta-=.13;if(event.key==='ArrowRight')s.theta+=.13;if(event.key==='ArrowUp')s.phi=Math.max(.25,s.phi-.13);if(event.key==='ArrowDown')s.phi=Math.min(Math.PI-.25,s.phi+.13);camera.position.copy(controls.target).add(new THREE.Vector3().setFromSpherical(s));controls.update();};container.addEventListener('keydown',onKey);
   const onLost=e=>{e.preventDefault();emit('journal-error',new Error('The graphics context was lost. Reload to restore the journal.'));};renderer.domElement.addEventListener('webglcontextlost',onLost);
   const resizeObserver=new ResizeObserver(resize);resizeObserver.observe(container);const observer=new IntersectionObserver(entries=>{active=entries[0].isIntersecting;},{rootMargin:'150px'});observer.observe(container);
-  function animate(time){if(disposed)return;requestId=requestAnimationFrame(animate);if(!active||time-lastTime<22)return;const delta=Math.min((time-lastTime)/1000||.024,.08);lastTime=time;const t=media.matches?1:1-Math.exp(-delta*7.5);applyPose(t);if(cameraTween){camera.position.lerp(goalCamera,t);controls.target.lerp(goalTarget,t);if(camera.position.distanceTo(goalCamera)<.002)cameraTween=false;}controls.update();updateDimensions();renderer.render(scene,camera);}
+  function animate(time){if(disposed)return;requestId=requestAnimationFrame(animate);if(!active||time-lastTime<22)return;const delta=Math.min((time-lastTime)/1000||.024,.08);lastTime=time;const t=media.matches?1:1-Math.exp(-delta*7.5);applyPose(t);if(cameraTween){camera.position.lerp(goalCamera,t);controls.target.lerp(goalTarget,t);if(camera.position.distanceTo(goalCamera)<.002)cameraTween=false;}controls.update();updateDimensions();renderer.render(scene,camera);
+    const showDetail=!detailDismissed&&view==='closed'&&Math.abs(fold-Math.PI)<.025;
+    if(showDetail)renderDetail();
+    setDetailVisible(showDetail);
+  }
   setState(initialState);resize();updatePose(true,true);updateDimensions();renderer.render(scene,camera);requestId=requestAnimationFrame(animate);queueMicrotask(()=>emit('journal-ready',{view,renderer:'three.js'}));
-  return{setState,setView,reset,capture(){renderer.render(scene,camera);return renderer.domElement.toDataURL('image/png');},dispose(){if(disposed)return;disposed=true;cancelAnimationFrame(requestId);resizeObserver.disconnect();observer.disconnect();container.removeEventListener('keydown',onKey);renderer.domElement.removeEventListener('webglcontextlost',onLost);controls.dispose();dimensions.dispose();const geometries=new Set(),otherMaterials=new Set();scene.traverse(o=>{if(o.geometry)geometries.add(o.geometry);if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>otherMaterials.add(m));});geometries.forEach(g=>g.dispose());otherMaterials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());materials.dispose();env.dispose();renderer.dispose();renderer.domElement.remove();}};
+  return{setState,setView,reset,dismissDetail,capture(){renderer.render(scene,camera);return renderer.domElement.toDataURL('image/png');},dispose(){if(disposed)return;disposed=true;cancelAnimationFrame(requestId);resizeObserver.disconnect();observer.disconnect();setDetailVisible(false);detailEnvironment.dispose();detailRenderer.dispose();detailRenderer.domElement.remove();container.removeEventListener('keydown',onKey);renderer.domElement.removeEventListener('webglcontextlost',onLost);controls.dispose();dimensions.dispose();const geometries=new Set(),otherMaterials=new Set();scene.traverse(o=>{if(o.geometry)geometries.add(o.geometry);if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>otherMaterials.add(m));});geometries.forEach(g=>g.dispose());otherMaterials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());materials.dispose();env.dispose();renderer.dispose();renderer.domElement.remove();}};
 }

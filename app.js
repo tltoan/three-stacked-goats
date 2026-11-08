@@ -30,7 +30,7 @@ $$('[data-format]').forEach(el=>el.addEventListener('click',()=>{state.inserts[a
 $$('[data-paper]').forEach(el=>el.addEventListener('click',()=>{state.inserts[activeBook].color=el.dataset.paper;render();if(viewer)changeView('open');}));
 $$('[data-view]').forEach(el=>el.addEventListener('click',()=>changeView(el.dataset.view)));
 $('#reset-view').addEventListener('click',()=>{viewer?.reset();changeView('closed');notify('View reset. Your paper choices are kept.');});
-$('#save-config').addEventListener('click',()=>{const text=['THREE STACKED GOATS','Your journal concept','',`Leather cover: ${LABELS[state.leather]}`,...state.inserts.map((b,i)=>`Book ${i+1}: ${LABELS[b.type]} / ${PAPER_LABELS[b.color]} paper`),'','Closed size: 5 in tall x 4 in wide (127 x 101.6 mm).','Capacity: three replaceable books.','Status: product concept, not an order.','Model proportions, material finish, paper weights, page counts, ruling/dots, attachment and writing compatibility require physical samples.','',`Reopen this combination: ${new URL('./',location.href).href}?${configurationParams()}`].join('\n');const blob=new Blob([text],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='three-stacked-goats-combination.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);notify('Your combination has been downloaded.');});
+$('#save-config')?.addEventListener('click',()=>{const text=['THREE STACKED GOATS','Your journal concept','',`Leather cover: ${LABELS[state.leather]}`,...state.inserts.map((b,i)=>`Book ${i+1}: ${LABELS[b.type]} / ${PAPER_LABELS[b.color]} paper`),'','Closed size: 5 in tall x 4 in wide (127 x 101.6 mm).','Capacity: three replaceable books.','Status: product concept, not an order.','Model proportions, material finish, paper weights, page counts, ruling/dots, attachment and writing compatibility require physical samples.','',`Reopen this combination: ${new URL('./',location.href).href}?${configurationParams()}`].join('\n');const blob=new Blob([text],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='three-stacked-goats-combination.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);notify('Your combination has been downloaded.');});
 render();
 const container=$('#journal-viewer');
 function failModel(){
@@ -54,6 +54,16 @@ container.addEventListener('journal-ready',()=>{
   container.setAttribute('aria-busy','false');
 });
 container.addEventListener('journal-error',failModel);
-import('./journal3d.js?v=16').then(({createJournalViewer})=>{viewer=createJournalViewer(container,{...state,activeInsert:activeBook});changeView(currentView);}).catch(e=>{console.error('Journal preview unavailable:',e);failModel();});
+import('./journal3d.js?v=26').then(({createJournalViewer})=>{viewer=createJournalViewer(container,{...state,activeInsert:activeBook});changeView(currentView);}).catch(e=>{console.error('Journal preview unavailable:',e);failModel();});
 const observer=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in-view');observer.unobserve(e.target);}}),{threshold:.15});$$('.origin-intro h2,.origin-intro p,.reference-gallery figure,.paper-story h2,.paper-story-list>div,.faq h2,.faq details').forEach(e=>observer.observe(e));
 window.addEventListener('pagehide',event=>{if(!event.persisted)viewer?.dispose();});
+
+const modelStage=$('#model-stage');
+container.addEventListener('journal-detail',event=>modelStage.classList.toggle('show-magnify',event.detail.visible));
+$('#close-journal-detail').addEventListener('click',()=>{viewer?.dismissDetail();$('#reset-view').focus({preventScroll:true});});
+
+// Start the hero scene when the logo intro has finished revealing the page.
+const heroFrame=document.getElementById('hero-workstation');
+function startHero(){if(!document.documentElement.classList.contains('intro-pending')&&!heroFrame.src)heroFrame.src=heroFrame.dataset.src;}
+const heroReveal=new MutationObserver(()=>{startHero();if(heroFrame.src)heroReveal.disconnect();});
+heroReveal.observe(document.documentElement,{attributes:true,attributeFilter:['class']});startHero();
