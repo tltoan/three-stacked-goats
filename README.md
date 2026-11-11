@@ -20,10 +20,10 @@ Third-party library and font licenses are included in assets/.
 ## Refill pack
 
 The homepage includes the three-book refill product at `#refills`, priced at $10.
-Each 5 × 4 inch kraft booklet independently supports Blank, Lined, or Dotted ivory
-paper. Selecting a book unties the pack, separates the booklets, and opens all
-three to show their selected paper. Desktop lays the spreads side by side; mobile
-stacks them vertically. The Tied pack control closes and reties them. Choices are saved locally under `3sg-refill-pack-v1`, separately from the
+Each 5 × 4 inch kraft booklet independently supports Blank, Lined, or Dotted
+paper in Ivory, Blue, or Black. Selecting a book unties the pack, separates the booklets, and opens all
+three before framing the selected spread at a readable size. The thumbnail row
+switches between individual books on desktop and mobile. The Tied pack control closes and reties them. Choices are saved locally under `3sg-refill-pack-v1`, separately from the
 journal configuration. The Save button downloads the selection; it does not
 submit an order or take payment.
 
@@ -32,7 +32,9 @@ loads as the product approaches the viewport. Its charcoal cotton tie animation
 uses `refill/assets/cord-motion.bin` and the matching JSON metadata. Keep these
 files together when publishing. The standalone refill prototype remains separate.
 
-Run `node scripts/check-refill-config.mjs` to check all 27 paper combinations,
-saved-state validation, summary order, and the $10 pack price. Run
+Run `node scripts/check-refill-config.mjs` to check all 729 type/color combinations,
+saved-state validation, migration of older ivory packs, exports, and the $10 pack price. Run
 `node scripts/check-refill-motion.mjs` to check that the tie clears and the books
 separate before opening, and that the final spreads do not overlap.
+Run `node scripts/check-refill-slide.mjs` to check camera easing, rapid selection
+changes, and consistent motion across frame rates.

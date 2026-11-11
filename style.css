@@ -1,5 +1,6 @@
 @font-face{font-family:"Geist Serif";src:url('./assets/geist-serif-regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
 @font-face{font-family:"Geist Mono";src:url('./assets/geist-mono.woff2') format('woff2');font-weight:100 900;font-style:normal;font-display:swap}
+@font-face{font-family:"Inkheart";src:url('./assets/inkheart-book.ttf') format('truetype');font-weight:400;font-style:normal;font-display:block}
 /* Desktop panel fits below the header and keeps equal viewport space while sticky. */
 :root{color-scheme:light;--focus:#434d38;--action-hover:#434d38;--link-hover:#434d38;--footer-bg:#181715;--footer-ink:#e8e8e3;--font-display:"Geist Serif",Georgia,serif;--font-text:"Geist Mono","SFMono-Regular",Consolas,monospace;--bg:#e8e8e3;--surface:#dcdcd6;--ink:#181715;--muted:#62625b;--accent:#bfb21a;--olive:#434d38;--light:#f4f3ed;--brown:#50352d;--blue-paper:#274abb;--black-paper:#242424;--ivory:#eeeadd;--gutter:32px;--stage-height:min(1100px,calc(100svh - 160px));--story-columns:55% 45%;--copy-inset:clamp(32px,4.5vw,72px);--body:16px;--small:14px;--display:clamp(44px,4.25vw,66px);--head:clamp(32px,3.1vw,46px)}
 *{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-text);font-synthesis:none;font-size:var(--body);line-height:1.55;-webkit-font-smoothing:antialiased}button,input,select{font:inherit}button,a{-webkit-tap-highlight-color:transparent}a{color:inherit;text-decoration:none}button{cursor:pointer;color:inherit;border:0;background:none}button:disabled{cursor:wait}a:focus-visible,button:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--focus);outline-offset:5px}button:active,.button:active{transform:translateY(2px)}button,a{touch-action:manipulation}h1,h2,h3,p,figure{margin:0}h1,h2{font-family:var(--font-display);font-weight:400;letter-spacing:-.025em;line-height:1.05;text-wrap:balance}h1{font-size:var(--display)}h2{font-size:var(--head)}h3{font-family:var(--font-display);font-size:24px;font-weight:400;letter-spacing:-.015em;line-height:1.2}p{text-wrap:pretty}p+p{margin-top:18px}svg{width:24px;height:24px}::selection{background:var(--accent);color:#181715}
@@ -28,9 +29,8 @@ html.intro-pending{overflow:hidden}
 html.intro-pending #site-content{visibility:hidden}
 html.intro-pending .logo-intro{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;background:#fff}
 .logo-intro video{display:block;width:100%;height:100%;max-height:100svh;object-fit:contain}
-#skip-intro{position:absolute;right:clamp(24px,3vw,48px);bottom:clamp(24px,4vh,48px);padding:12px 16px;border:0;background:#e8e8e3;color:#171715;font:inherit;cursor:pointer}
-#skip-intro span{margin-left:20px}
-#skip-intro:focus-visible{outline:none;text-decoration:underline;text-underline-offset:6px}.site-header .wordmark:focus-visible{outline:none;text-decoration:none}.site-header .wordmark,.site-header .wordmark span{text-decoration:none}
+.logo-intro:focus{outline:none}
+.site-header .wordmark:focus-visible{outline:none;text-decoration:none}.site-header .wordmark,.site-header .wordmark span{text-decoration:none}
 
 .site-header .wordmark{display:inline-flex;align-items:center;gap:14px}
 .wordmark-icon{display:block;width:28px;height:56px;object-fit:contain;flex:none}
@@ -55,6 +55,11 @@ html.intro-pending.intro-landing .logo-intro{pointer-events:none;opacity:0;trans
 .journal-detail-close:hover{background:var(--light)}
 .journal-detail-close:focus-visible{outline-offset:-3px}
 @media(hover:none),(pointer:coarse){.journal-detail-close{opacity:1;width:36px;height:36px}}
+@media(max-width:700px){
+ .journal-detail{width:80px;height:70px}
+ .journal-detail-close{top:2px;right:2px;width:32px;height:32px}
+ .journal-detail-close svg{width:16px;height:16px}
+}
 
 .workstation-hero{margin:0 var(--gutter) 100px}.workstation-hero .hero-copy{display:block;min-height:0;padding:15px 0 32px}.hero-copy .intro-main{display:grid;grid-template-columns:1.35fr 1fr auto;column-gap:40px;align-items:center}.hero-copy h1{font-size:clamp(32px,3.4vw,54px);grid-row:1/span 3}.hero-copy .lead{font-size:14px;margin:0;grid-column:2}.hero-copy .product-price{margin-top:14px;grid-column:2}.hero-copy .button{grid-column:3;grid-row:1/span 3;margin:0!important;white-space:nowrap}#hero-workstation{display:block;border:0;width:100%;height:68svh;min-height:430px;background:var(--surface)}.product-story>.model-stage{grid-row:1/span 2}.product-story>.configurator{grid-row:1;padding-top:40px}.product-story>.paper-story{grid-row:2}
 @media(max-width:900px){.hero-copy .intro-main{grid-template-columns:1fr 1fr;gap:18px}.hero-copy h1{grid-column:1/-1;grid-row:auto}.hero-copy .lead,.hero-copy .product-price{grid-column:1}.hero-copy .button{grid-column:2;grid-row:2/span 2;justify-self:end}.workstation-hero{margin-bottom:60px}#hero-workstation{height:55svh;min-height:320px}}@media(max-width:550px){.hero-copy .intro-main{display:block}.hero-copy .lead{margin-top:20px}.hero-copy .button{margin-top:22px!important}#hero-workstation{height:340px;min-height:0}.workstation-hero{margin-inline:16px}.workstation-hero .hero-copy{padding-bottom:24px}}
@@ -109,17 +114,38 @@ footer{min-height:344px}
 .refill-price{display:flex;align-items:baseline;justify-content:space-between;gap:17px;margin-top:24px!important}
 .configurator>.refill-specs{font-size:13px;line-height:1.6;color:var(--muted);margin-top:20px}
 .refill-product .books-heading{margin-top:32px}
-#refill-viewer{position:absolute;inset:28px 0 112px;outline-offset:-6px;cursor:grab;isolation:isolate}
+#refill-viewer{position:absolute;inset:28px 0 250px;outline-offset:-6px;cursor:grab;isolation:isolate}
 #refill-viewer:active{cursor:grabbing}
 #refill-viewer canvas{display:block;width:100%;height:100%}
 #refill-loading{position:absolute;inset:50% 24px auto;text-align:center;font-size:14px;pointer-events:none}
 #refill-view-status{font-size:13px;color:var(--muted)}
+#refill-model-stage .model-caption[hidden]{display:none}
 .book-labels{position:absolute;inset:0;z-index:1;pointer-events:none}
 .book-labels button{position:absolute;left:0;top:0;pointer-events:auto;display:flex;flex-direction:column;align-items:center;gap:1px;padding:5px 9px;font-size:11px;line-height:1.4;background:var(--surface);white-space:nowrap}
 .book-labels button strong{font-size:11px;font-weight:400;color:var(--muted)}
 .book-labels button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
 .book-labels button[aria-pressed=true] strong{color:var(--bg)}
 .book-labels[hidden],.book-labels button[hidden]{display:none}
+/* Individual refill view: one readable spread with a stable booklet selector. */
+#refill-labels{inset:auto auto 90px 50%;width:min(420px,calc(100% - 40px));transform:translateX(-50%);display:flex;gap:12px;align-items:stretch}
+#refill-labels[hidden]{display:none}
+#refill-labels button{position:relative;inset:auto;flex:1;min-width:0;gap:4px;padding:10px 4px 8px;background:transparent;color:var(--ink);border-bottom:2px solid transparent;transition:border-color .2s,background .2s}
+#refill-labels button strong{font-size:10px;color:var(--muted)}
+#refill-labels button[aria-pressed=true]{border-color:var(--ink)}
+#refill-labels button:hover{background:rgba(24,23,21,.04)}
+#refill-labels button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.refill-thumbnail{display:flex;width:min(100%,96px);aspect-ratio:8/5;margin-bottom:4px;overflow:hidden;border:1px solid #aa8a61;border-radius:3px;box-shadow:0 3px 6px rgba(55,40,25,.12);transform:rotate(-2deg);transition:transform .2s;--paper-rule:rgba(238,238,238,.5)}
+#refill-labels button[aria-pressed=true] .refill-thumbnail,#refill-labels button:hover .refill-thumbnail{transform:rotate(0) translateY(-2px)}
+#refill-labels [data-color=ivory] .refill-thumbnail{--paper-rule:rgba(105,110,96,.4)}
+.refill-thumbnail i{flex:1;min-width:0;background-color:var(--book-paper,#eeeadd);box-shadow:inset -3px 0 4px rgba(24,20,16,.12)}
+.refill-thumbnail i+i{box-shadow:inset 3px 0 4px rgba(24,20,16,.12)}
+[data-format=lined] .refill-thumbnail i{background-image:repeating-linear-gradient(transparent 0 5px,var(--paper-rule) 5px 6px)}
+[data-format=dotted] .refill-thumbnail i{background-image:radial-gradient(circle,var(--paper-rule) .65px,transparent .85px);background-size:5px 5px}
+@media(max-width:700px){
+ #refill-labels{bottom:62px;gap:6px;width:calc(100% - 28px)}
+ #refill-labels button{padding:6px 2px;gap:2px}
+ .refill-thumbnail{width:min(100%,80px)}
+}
 .combination .save-note{font-size:11px;line-height:1.6;color:var(--muted);margin-top:14px}
 @media(max-width:1150px) and (min-width:701px){
  .site-header{gap:22px}.site-header .wordmark{font-size:22px}.site-header nav{font-size:13px;gap:18px}
@@ -140,11 +166,57 @@ footer{min-height:344px}
  .reference-gallery{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
  .origin{padding-top:15px}.origin-intro h2{font-size:44px}
  .refill-product{margin-top:0;margin-bottom:55px}.refill-product>.model-stage{order:1}.refill-product>.configurator{order:2;padding-top:38px}
- #refill-viewer{inset:20px 0 60px}.book-labels button{padding:4px 6px;font-size:10px}.book-labels button strong{font-size:10px}
+ #refill-viewer{inset:20px 0 178px}.book-labels button{padding:4px 6px;font-size:10px}.book-labels button strong{font-size:10px}
  footer{min-height:220px}
 }
 /* Clip the hero's interactive bleed at the page edge without creating a scroll container. */
 #site-content{overflow-x:clip}
 @media(max-width:700px){.book-labels button{min-height:44px;justify-content:center}.view-switch button{min-height:36px}}
 
-@media(max-width:700px){.refill-product[data-refill-layout="booklets"] #refill-model-stage{height:520px;min-height:520px;max-height:520px}}
+/* Figma layout grid: two blocks around both content and navigation. */
+:root{--layout-block:32px;--page-gutter:calc(2 * var(--layout-block));--nav-gutter:var(--page-gutter)}
+.journal-site .site-header{padding-inline:var(--nav-gutter)}
+.journal-site main{padding-inline:var(--page-gutter)}
+.journal-site .workstation-hero{margin-inline:0}
+.journal-site .product-story>.model-stage{margin-inline:0;width:100%}
+.journal-site .product-story>.configurator,.journal-site .product-story>.paper-story{padding-right:0}
+.journal-site .origin,.journal-site .faq{padding-inline:0}
+.journal-site footer{padding-inline:var(--page-gutter)}
+@media(min-width:901px) and (max-width:950px){
+ .journal-site .site-header{gap:18px}
+ .journal-site .site-header .wordmark{font-size:20px}
+}
+@media(min-width:701px){
+ .journal-site .hero-copy .intro-main{height:auto;min-height:101px}
+}
+@media(max-width:700px){
+ :root{--layout-block:16px}
+ .journal-site .product-story>.configurator,.journal-site .product-story>.paper-story{padding-left:0}
+}
+
+/* Figma 162:405: centered Inkheart lockup. */
+.journal-site .centered-header{display:flex;justify-content:center;align-items:flex-start;height:183px;min-height:183px;margin:0;padding:0;gap:0;flex-wrap:nowrap}
+.centered-header .script-wordmark{position:relative;display:block;width:202px;height:164px;margin:0;color:#000}
+.centered-header .script-wordmark:hover{color:#000}
+.script-wordmark .wordmark-icon{position:absolute;left:72px;top:30px;width:58px;height:114px}
+.script-wordmark span{position:absolute;display:block;font-family:"Inkheart",serif;font-size:50px;font-weight:400;font-style:normal;line-height:41.664px;letter-spacing:-.992px;white-space:nowrap}
+.script-wordmark .wordmark-stacked{left:0;top:71px}
+.script-wordmark .wordmark-goats{left:56px;top:110.328px}
+.script-wordmark .wordmark-three{left:119px;top:33px;font-size:100px}
+.configurator>.journal-price{display:flex;align-items:baseline;justify-content:space-between;gap:17px;margin-top:24px}
+
+/* The photographic journal shares the homepage, above both product customizers. */
+.journal-site .journal-hero{max-width:1280px;margin:0 auto 96px;padding-top:28px}
+.journal-hero .book-visual[data-state="loading"],.journal-hero .book-visual[data-state="ready"]{visibility:hidden}
+#model-stage,#refill-model-stage{--stage-height:min(780px,calc(100svh - 64px))}
+@media(min-width:701px){
+ .journal-pages.journal-hero .book-row{grid-template-columns:56px minmax(0,980px) 56px;gap:clamp(16px,3vw,48px)}
+}
+@media(min-width:701px) and (max-height:800px){
+ .journal-pages.journal-hero .book-row{grid-template-columns:48px minmax(0,min(840px,calc((100svh - 260px)*1.5988))) 48px;gap:32px}
+}
+@media(max-width:700px){
+ .journal-site .journal-hero{width:calc(100% + 24px);padding-top:22px;margin:0 -12px 64px}
+ .journal-pages.journal-hero .book-visual{max-width:640px}
+ #model-stage,#refill-model-stage{--stage-height:clamp(420px,62svh,520px);height:var(--stage-height);min-height:var(--stage-height);max-height:var(--stage-height)}
+}

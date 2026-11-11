@@ -21,5 +21,17 @@ export function unpackMotion(progress){
 // Coordinates locate the centre of the right page; the open spread is centred
 // two inches to its left. Portrait screens arrange books from top to bottom.
 export function bookletLayout(slot,compact){
-  return compact?{x:2,z:slot*5.9}:{x:2+(slot-1)*8.65,z:0};
+  return compact?{x:2,z:slot*9}:{x:2+(slot-1)*12,z:0};
+}
+// A small rise beside the binding, returning to the desk at the outer edge.
+// Both ends stay fixed so the same leaves can bend without leaving the spine.
+export function pageArch(distance,width=4,z=0){
+  const d=Math.max(0,Math.min(width,distance));
+  return .16*(d/.42)*Math.exp(1-d/.42)*(1-ramp(d,width-.4,width))*(.94+.06*Math.cos(z*Math.PI/5));
+}
+// Exact critically damped motion: starts gently and keeps its velocity when a
+// customer selects another book during the glide. Units are inches/seconds.
+export function slideStep(position,velocity,target,seconds,frequency=7.5){
+  const offset=position-target,carry=velocity+frequency*offset,decay=Math.exp(-frequency*seconds);
+  return {position:target+(offset+carry*seconds)*decay,velocity:(velocity-frequency*carry*seconds)*decay};
 }

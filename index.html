@@ -6,37 +6,50 @@
   <title>Three Stacked Goats — Keep your interests close</title>
   <meta name="description" content="A passport size leather cased journal, with three refillable books.">
   <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./style.css?v=38">
+  <link rel="stylesheet" href="./style.css?v=48">
+  <link rel="stylesheet" href="./journal-pages/journal.css?v=1">
+  <link rel="preload" href="./journal-pages/assets/open-journal.png" as="image">
+  <link rel="preload" href="./journal-pages/assets/closed-journal.png" as="image" fetchpriority="high">
+  <link rel="preload" href="./assets/inkheart-book.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="preload" href="./assets/geist-serif-regular.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="./assets/geist-mono.woff2" as="font" type="font/woff2" crossorigin>
   <script type="importmap">{"imports":{"three":"./assets/three.module.js","three/addons/controls/OrbitControls.js":"./assets/OrbitControls.js","three/addons/geometries/RoundedBoxGeometry.js":"./assets/RoundedBoxGeometry.js"}}</script>
   <script>if(!matchMedia("(prefers-reduced-motion: reduce)").matches)document.documentElement.classList.add("intro-pending");</script>
-  <script type="module" src="./intro.js?v=5"></script>
-  <script type="module" src="./app.js?v=34"></script>
-  <script type="module" src="./refill/app.js?v=3"></script>
+  <script type="module" src="./intro.js?v=6"></script>
+  <script type="module" src="./home.js?v=4"></script>
+  <script type="module" src="./app.js?v=36"></script>
+  <script type="module" src="./refill/app.js?v=8"></script>
 </head>
 <body class="journal-site">
-  <div class="logo-intro" id="logo-intro" role="dialog" aria-modal="true" aria-label="Three Stacked Goats introduction">
+  <div class="logo-intro" id="logo-intro" role="dialog" aria-modal="true" aria-label="Three Stacked Goats introduction" tabindex="-1">
     <video id="logo-intro-video" autoplay muted playsinline preload="auto" aria-label="Three Stacked Goats logo animation"><source src="./assets/three-stacked-goats-logo.mp4" type="video/mp4"></video>
-    <button id="skip-intro" type="button">Skip intro <span aria-hidden="true">↗</span></button>
   </div>
   <div id="site-content">
   <a class="skip-link" href="#build">Skip to configurator</a>
-  <header class="site-header">
-    <a class="wordmark" href="./" aria-label="Three Stacked Goats home"><img class="wordmark-icon" src="./assets/figma/imgThreeStackedGoatsEditableVectorLogo.svg" alt="" width="28" height="56"><span>three-stacked-goats</span></a>
-    <nav aria-label="Main navigation"><a href="#story">The idea</a><a href="#paper">The paper</a><a href="#refills">Refill books</a><a href="#build" class="nav-action button primary">Build your journal <img src="./assets/figma/imgNotebook.svg" width="24" height="24" alt=""></a>
-    </nav>
+  <header class="site-header centered-header">
+    <a class="wordmark script-wordmark" href="./" aria-label="Three Stacked Goats home">
+      <img class="wordmark-icon" src="./assets/figma/home-162-405/goat-mark.svg" alt="" width="58" height="114">
+      <span class="wordmark-goats" aria-hidden="true">Goats</span>
+      <span class="wordmark-stacked" aria-hidden="true">Stacked</span>
+      <span class="wordmark-three" aria-hidden="true">3</span>
+    </a>
   </header>
   <main>
-    <section class="workstation-hero" aria-label="Three Stacked Goats journal">
-      <section class="intro hero-copy">
-        <div class="intro-main">
-          <h1>Keep your interests close</h1>
-          <p class="lead">A passport size leather cased journal, with three refillable books.</p>
-          <p class="product-price"><span>leather cover + three books</span> <strong>$59</strong></p>
+    <section class="journal-pages journal-hero" data-journal-pages data-homepage data-defer-opening aria-label="Explore the Three Stacked Goats journal">
+      <h1 class="sr-only">Three Stacked Goats — Keep your interests close</h1>
+      <div class="book-row">
+        <button class="arrow previous" type="button" aria-label="Previous spread" disabled><svg viewBox="0 0 24 48" aria-hidden="true"><path d="M17 5 7 24l10 19"/></svg></button>
+        <div class="book-visual" id="book" data-state="loading" tabindex="0" role="group" aria-label="Interactive journal. Click a page, swipe, or use the left and right arrow keys." aria-busy="true">
+          <canvas id="journal" width="1586" height="992" role="img" aria-label="A brown leather journal opening to an illustrated blue dotted spread"></canvas>
+          <button class="page-hit left" type="button" aria-label="Turn the left page back" disabled></button>
+          <button class="page-hit right" type="button" aria-label="Turn the right page forward" disabled></button>
+          <p id="loading" role="status">Opening the journal…</p>
         </div>
-      </section>
-      <div class="hero-scene"><iframe id="hero-workstation" title="Explore the journal — flip the pages" src="./workstation/?embed&amp;bleed=300" scrolling="no"></iframe></div>
+        <button class="arrow next" type="button" aria-label="Next spread" disabled><svg viewBox="0 0 24 48" aria-hidden="true"><path d="m7 5 10 19L7 43"/></svg></button>
+      </div>
+      <div class="sr-only"><h2 id="spread-title">Action cues fear.</h2><span id="counter" aria-label="Spread 1 of 7">1 / 7</span></div>
+      <p class="sr-only" id="hint">Swipe, click, or use the arrow keys.</p>
+      <p class="sr-only" id="announcement" aria-live="polite" role="status"></p>
     </section>
     <div class="product-story">
       <div class="model-stage" id="model-stage" data-ui>
@@ -56,6 +69,7 @@
       <section class="configurator" id="build">
         <h2>Make it yours</h2>
         <p>Each book its own purpose.</p>
+        <p class="product-price journal-price"><span>leather cover + three books</span><strong>$59</strong></p>
         <fieldset class="leather-field"><legend><span class="cover-label">cover color</span><span id="cover-name">Brown</span></legend><div class="leather-options" role="group" aria-label="Leather color">
           <button class="leather-choice" data-leather="brown" aria-pressed="true"><span class="leather-sample brown"><img class="check" src="./assets/figma/imgSelectedCheck.svg" width="24" height="24" alt=""></span><span>Brown</span></button>
           <button class="leather-choice" data-leather="black" aria-pressed="false"><span class="leather-sample black"><img class="check" src="./assets/figma/imgSelectedCheck.svg" width="24" height="24" alt=""></span><span>Black</span></button>
@@ -89,9 +103,9 @@
         <div class="stage-top"><button class="icon-button" id="refill-reset" aria-label="Reset refill pack view" title="Reset refill pack view" disabled><img src="./assets/figma/imgResetView.svg" width="20" height="20" alt=""></button></div>
         <div id="refill-viewer" role="img" aria-label="Interactive 3D refill pack: three 5 by 4 inch kraft booklets with a charcoal cotton tie. Drag or use arrow keys to rotate." aria-busy="true" tabindex="0"></div>
         <div id="refill-labels" class="book-labels" role="group" aria-label="Select a refill booklet" hidden>
-          <button data-refill-model-book="0" aria-pressed="true"><span>Book 1</span><strong>Blank</strong></button>
-          <button data-refill-model-book="1" aria-pressed="false"><span>Book 2</span><strong>Lined</strong></button>
-          <button data-refill-model-book="2" aria-pressed="false"><span>Book 3</span><strong>Dotted</strong></button>
+          <button data-refill-model-book="0" aria-pressed="true"><span class="refill-thumbnail" aria-hidden="true"><i></i><i></i></span><span>Book 1</span><strong>Blank</strong></button>
+          <button data-refill-model-book="1" aria-pressed="false"><span class="refill-thumbnail" aria-hidden="true"><i></i><i></i></span><span>Book 2</span><strong>Lined</strong></button>
+          <button data-refill-model-book="2" aria-pressed="false"><span class="refill-thumbnail" aria-hidden="true"><i></i><i></i></span><span>Book 3</span><strong>Dotted</strong></button>
         </div>
         <p id="refill-loading" role="status">Preparing your refill pack…</p>
         <div class="stage-bottom">
@@ -104,7 +118,7 @@
         <h2 id="refill-title">A fresh stack.</h2>
         <p>Three new books for whatever comes next.</p>
         <p class="product-price refill-price"><span>three refill books</span><strong data-refill-price>$10</strong></p>
-        <p class="refill-specs">5 × 4 inches. Flexible kraft covers, ivory pages, and a charcoal cotton tie.</p>
+        <p class="refill-specs">5 × 4 inches. Flexible kraft covers and a charcoal cotton tie. Choose ivory, blue, or black paper for each book.</p>
         <div class="books-heading"><h3 class="sr-only">Customize your refill books</h3><span>mix and match</span></div>
         <div class="book-tabs" role="tablist" aria-label="Choose a refill book to customize">
           <button role="tab" id="refill-tab-0" aria-selected="true" aria-controls="refill-panel" data-refill-book="0"><span>Book 1</span><small>Blank</small></button>
@@ -116,6 +130,11 @@
             <button data-refill-format="blank" aria-pressed="true"><img class="paper-icon sketch" src="./assets/figma/imgSketchPaper.svg" width="37" height="43" alt=""><span>Blank</span></button>
             <button data-refill-format="lined" aria-pressed="false"><img class="paper-icon lined" src="./assets/figma/imgLinedPaper.svg" width="37" height="43" alt=""><span>Lined</span></button>
             <button data-refill-format="dotted" aria-pressed="false"><img class="paper-icon dotted" src="./assets/figma/imgDottedPaper.svg" width="37" height="43" alt=""><span>Dotted</span></button>
+          </div></fieldset>
+          <fieldset class="paper-field"><legend class="sr-only">Paper color <span id="refill-color-name">Ivory</span></legend><div class="paper-options" role="group" aria-label="Refill paper color">
+            <button data-refill-color="ivory" aria-label="Ivory paper" aria-pressed="true"><span class="paper-swatch ivory"><img src="./assets/figma/imgSwatchContainer.svg" width="52" height="52" alt=""></span><span>Ivory</span></button>
+            <button data-refill-color="blue" aria-label="Blue paper" aria-pressed="false"><span class="paper-swatch blue"><img src="./assets/figma/imgSwatchContainer1.svg" width="52" height="40" alt=""></span><span>Blue</span></button>
+            <button data-refill-color="black" aria-label="Black paper" aria-pressed="false"><span class="paper-swatch black"><img src="./assets/figma/imgSwatchContainer2.svg" width="52" height="40" alt=""></span><span>Black</span></button>
           </div></fieldset>
           <div class="paper-preview-wrap"><canvas id="refill-paper-preview" width="400" height="500" role="img" aria-label="Blank ivory paper preview for Book 1"></canvas><div><h3 id="refill-paper-title">For my artists.</h3><p id="refill-paper-description">Open space for sketches, loose thoughts, and whatever comes next.</p></div></div>
         </div>

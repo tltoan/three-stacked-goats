@@ -5,7 +5,6 @@ import { dockKeyframes, sourceLogoBox, fittedLogoBox, DOCK_DURATION, TAKEOFF_OFF
   const intro = document.getElementById('logo-intro');
   const video = document.getElementById('logo-intro-video');
   const content = document.getElementById('site-content');
-  const skip = document.getElementById('skip-intro');
   let finished = false;
   let watchdog;
   let frame;
@@ -32,8 +31,7 @@ import { dockKeyframes, sourceLogoBox, fittedLogoBox, DOCK_DURATION, TAKEOFF_OFF
   if (!root.classList.contains('intro-pending')) { finish(); return; }
   for (const asset of ['logo-dock-body.svg', 'logo-part-0.svg']) { const image = new Image(); image.src = `./assets/${asset}`; }
   content.inert = true;
-  skip.focus({preventScroll: true});
-  skip.addEventListener('click', finish);
+  intro.focus({preventScroll: true});
   intro.addEventListener('keydown', event => { if (event.key === 'Escape') finish(); });
   video.addEventListener('ended', finish, {once: true});
   video.addEventListener('error', finish, {once: true});

@@ -498,7 +498,7 @@ export function createJournalViewer(container, initialState = {}) {
     const direction=(view==='closed'?new THREE.Vector3(3.25,1.5,9.7):new THREE.Vector3(.65,1.65,10)).normalize(),right=new THREE.Vector3(direction.z,0,-direction.x).normalize(),up=new THREE.Vector3().crossVectors(direction,right).normalize(),center=bounds.getCenter(new THREE.Vector3());
     const tangent=Math.tan(THREE.MathUtils.degToRad(camera.fov/2)),aspect=width/height;let distance=0;
     for(const x of[bounds.min.x,bounds.max.x])for(const y of[bounds.min.y,bounds.max.y])for(const z of[bounds.min.z,bounds.max.z]){const v=new THREE.Vector3(x,y,z).sub(center),d=v.dot(direction);distance=Math.max(distance,Math.abs(v.dot(right))/(tangent*aspect)+d,Math.abs(v.dot(up))/tangent+d);}
-    distance*=view==='closed'?(width<500?1.32:1.24):1.12;goalTarget.copy(center);goalCamera.copy(direction).multiplyScalar(distance).add(center);cameraTween=true;
+    distance*=view==='closed'?(width<500?1.22:1.16):1.12;goalTarget.copy(center);goalCamera.copy(direction).multiplyScalar(distance).add(center);cameraTween=true;
     if(immediate){camera.position.copy(goalCamera);controls.target.copy(goalTarget);controls.update();cameraTween=false;}
   }
   function updatePose(resetCamera=false,immediate=false){pose=makePose();if(resetCamera)frameCamera(immediate);if(immediate)applyPose(1);}
@@ -531,13 +531,13 @@ export function createJournalViewer(container, initialState = {}) {
   detailRenderer.setSize(122,107,false);
   detailRenderer.outputColorSpace=renderer.outputColorSpace;detailRenderer.toneMapping=renderer.toneMapping;detailRenderer.toneMappingExposure=renderer.toneMappingExposure;
   detailRenderer.setClearColor(0xdddcd6,0);detailHost?.append(detailRenderer.domElement);
-  detailRenderer.domElement.setAttribute('role','img');detailRenderer.domElement.setAttribute('aria-label','Live overhead close-up of the brass fitting. Follows the journal rotation.');
+  detailRenderer.domElement.setAttribute('role','img');detailRenderer.domElement.setAttribute('aria-label','Live front close-up of the three stacked goats engraving. Follows the journal rotation.');
   // Render-target textures belong to their WebGL context. Give the small
   // preview its own environment so the brass retains its reflected light.
   const detailEnvironment=studioEnvironment(detailRenderer,256);
   const detailCamera=new THREE.PerspectiveCamera(31,122/107,.01,100);
   const detailCenter=new THREE.Vector3(),detailDirection=new THREE.Vector3();
-  const detailOrbit=new THREE.Spherical(),viewerOrbit=new THREE.Spherical();
+  const viewerOrbit=new THREE.Spherical();
   const homeOrbit=new THREE.Spherical().setFromVector3(new THREE.Vector3(3.25,1.5,9.7));
   let detailVisible=false,detailDismissed=false;
   function dismissDetail(){detailDismissed=true;setDetailVisible(false);}
@@ -547,20 +547,16 @@ export function createJournalViewer(container, initialState = {}) {
     emit('journal-detail',{visible:value});
   }
   function renderDetail(){
-    // OrbitControls rotates the main camera, not the book. Apply that same
-    // orbit change to this elevated camera, always aiming at the live fitting.
+    // Start on the engraved +Z face, then follow the main orbit with restrained
+    // yaw and pitch so the live fitting moves without losing the front mark.
     spineDetails.keeper.getWorldPosition(detailCenter);
     viewerOrbit.setFromVector3(detailDirection.copy(camera.position).sub(controls.target));
-    detailDirection.set(.18,1.1,1).transformDirection(spineDetails.keeper.matrixWorld);
-    detailOrbit.setFromVector3(detailDirection);
     const orbitTurn=viewerOrbit.theta-homeOrbit.theta;
-    // Follow the orbit within the fitting's outward-facing hemisphere. This
-    // stays continuous through full turns without disappearing into the hide.
-    detailOrbit.theta+=Math.atan2(Math.sin(orbitTurn),1.25+Math.cos(orbitTurn));
-    detailOrbit.phi=THREE.MathUtils.clamp(detailOrbit.phi+viewerOrbit.phi-homeOrbit.phi,.35,1);
-    detailDirection.setFromSpherical(detailOrbit);
-    detailCamera.position.copy(detailCenter).addScaledVector(detailDirection,.68);
-    detailCamera.up.copy(camera.up);
+    const yaw=Math.atan2(Math.sin(orbitTurn),1.25+Math.cos(orbitTurn));
+    const pitch=THREE.MathUtils.clamp(viewerOrbit.phi-homeOrbit.phi,-.28,.28);
+    detailDirection.set(Math.sin(yaw)*Math.cos(pitch),-Math.sin(pitch),Math.cos(yaw)*Math.cos(pitch)).transformDirection(spineDetails.keeper.matrixWorld);
+    detailCamera.position.copy(detailCenter).addScaledVector(detailDirection,.48);
+    detailCamera.up.set(0,1,0).transformDirection(spineDetails.keeper.matrixWorld);
     detailCamera.lookAt(detailCenter);
     scene.environment=detailEnvironment.texture;
     detailRenderer.render(scene,detailCamera);

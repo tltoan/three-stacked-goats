@@ -54,7 +54,7 @@ container.addEventListener('journal-ready',()=>{
   container.setAttribute('aria-busy','false');
 });
 container.addEventListener('journal-error',failModel);
-import('./journal3d.js?v=26').then(({createJournalViewer})=>{viewer=createJournalViewer(container,{...state,activeInsert:activeBook});changeView(currentView);}).catch(e=>{console.error('Journal preview unavailable:',e);failModel();});
+import('./journal3d.js?v=28').then(({createJournalViewer})=>{viewer=createJournalViewer(container,{...state,activeInsert:activeBook});changeView(currentView);}).catch(e=>{console.error('Journal preview unavailable:',e);failModel();});
 const observer=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in-view');observer.unobserve(e.target);}}),{threshold:.15});$$('.origin-intro h2,.origin-intro p,.reference-gallery figure,.paper-story h2,.paper-story-list>div,.faq h2,.faq details').forEach(e=>observer.observe(e));
 window.addEventListener('pagehide',event=>{if(!event.persisted)viewer?.dispose();});
 

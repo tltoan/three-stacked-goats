@@ -1,0 +1,51 @@
+/* Shared journal viewer. All presentation is scoped away from product customizers. */
+.journal-pages{width:100%;max-width:1120px;font-family:var(--font-text,GeistMono,monospace);color:#292823;line-height:1.6}
+.journal-pages .book-row{display:grid;grid-template-columns:56px minmax(0,820px) 56px;gap:clamp(16px,4vw,60px);align-items:center;justify-content:center}
+.journal-pages .book-visual{position:relative;width:100%;aspect-ratio:1586/992;touch-action:pan-y;isolation:isolate;transform-origin:50% 60%;filter:drop-shadow(0 18px 19px #39302520)}
+.journal-pages #journal{display:block;width:100%;height:100%;user-select:none;-webkit-user-select:none}
+.journal-pages button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.journal-pages button:disabled{cursor:default}
+.journal-pages button:active{transform:none}
+.journal-pages button:focus-visible,.journal-pages #book:focus-visible,.journal-replay:focus-visible{outline:2px solid #54634d;outline-offset:7px}
+.journal-pages .page-hit{position:absolute;top:3%;height:94%;width:48%;padding:0;background:none;touch-action:pan-y}
+.journal-pages .page-hit.left{left:2%;cursor:w-resize}
+.journal-pages .page-hit.right{right:2%;cursor:e-resize}
+.journal-pages .page-hit:focus-visible{outline-offset:-16px;border-radius:10px}
+.journal-pages .page-hit:disabled{cursor:default}
+.journal-pages .arrow{display:grid;place-items:center;width:56px;height:64px;padding:12px;opacity:.65;transition:opacity .2s,transform .2s}
+.journal-pages .arrow svg{width:20px;height:40px;fill:none;stroke:currentColor;stroke-width:1;stroke-linecap:round;stroke-linejoin:round}
+.journal-pages .arrow:hover{opacity:1}
+.journal-pages .previous:hover{transform:translateX(-4px)}
+.journal-pages .next:hover{transform:translateX(4px)}
+.journal-pages .arrow:disabled{opacity:.18;transform:none}
+.journal-pages .caption{display:flex;justify-content:center;align-items:baseline;gap:24px;margin-top:34px;min-height:20px}
+.journal-pages .caption h2{margin:0;font:400 13px/1.6 var(--font-text,GeistMono,monospace);letter-spacing:normal}
+.journal-pages #counter{font-size:11px;color:#8b877f;white-space:nowrap}
+.journal-pages .hint{margin:17px 0 0;text-align:center;font-size:11px;line-height:1.6;color:#8b877f;min-height:18px}
+.journal-pages .hint span[aria-hidden]{display:inline-block;margin-left:5px;letter-spacing:6px}
+.journal-pages #loading{position:absolute;inset:45% 0 auto;text-align:center;font-size:12px;color:#817b72;margin:0;filter:none}
+.journal-pages #loading[hidden]{display:none}
+.journal-replay,.journal-pages .journal-replay{min-height:44px;padding:10px 0 10px 16px;color:#6c6962;font-size:12px;white-space:nowrap}
+.journal-replay span{font-size:18px;margin-left:10px;vertical-align:-1px}
+.journal-replay:hover,.journal-pages .journal-replay:hover{color:#252820}
+.journal-replay:disabled{opacity:.4}
+@media(min-width:701px) and (max-height:800px){
+  .journal-pages{max-width:950px}
+  .journal-pages .book-row{grid-template-columns:48px minmax(0,min(690px,calc((100svh - 270px)*1.5988))) 48px;gap:32px}
+  .journal-pages .caption{margin-top:24px}
+}
+@media(max-width:700px){
+  .journal-pages .book-row{grid-template-columns:1fr 1fr;gap:12px 0}
+  .journal-pages .book-visual{grid-column:1/-1;grid-row:1;width:100%;max-width:560px;justify-self:center;filter:drop-shadow(0 12px 13px #39302522)}
+  .journal-pages .arrow{grid-row:2;height:44px;width:52px;padding:6px;margin-top:10px}
+  .journal-pages .arrow svg{height:28px;width:16px}
+  .journal-pages .previous{justify-self:end;margin-right:20px}
+  .journal-pages .next{justify-self:start;margin-left:20px}
+  .journal-pages .caption{margin-top:10px;gap:16px}
+  .journal-pages .caption h2{font-size:12px}
+  .journal-pages .hint{margin-top:14px}
+  .journal-pages .hint span[aria-hidden]{letter-spacing:4px}
+  .journal-replay,.journal-pages .journal-replay{font-size:11px;padding-left:8px}
+  .journal-replay span{margin-left:5px}
+}
+@media(prefers-reduced-motion:reduce){.journal-pages *{transition:none!important}}

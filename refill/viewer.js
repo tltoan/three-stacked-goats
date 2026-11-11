@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { UNPACK_SECONDS, ramp, unpackMotion, bookletLayout } from './motion.mjs?v=4';
+import { UNPACK_SECONDS, ramp, unpackMotion, bookletLayout, pageArch, slideStep } from './motion.mjs?v=6';
 import { loadCordMotion } from './cord-motion.js?v=2';
+import { PAPER_COLORS } from './config-state.mjs?v=2';
 
 
 export async function createRefillViewer(scope,configurator){
@@ -22,7 +23,7 @@ const random=(seed=932)=>()=>{seed=seed*16807%2147483647;return(seed-1)/21474836
 try{
   await Promise.all([document.fonts.load('12px "Geist Mono"'),document.fonts.load('20px "Geist Serif"')]);
   const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});
-  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.setPixelRatio(Math.max(2,Math.min(devicePixelRatio,2.5)));
   renderer.outputColorSpace=THREE.SRGBColorSpace;
   renderer.toneMapping=THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure=1;
@@ -42,7 +43,7 @@ try{
   const key=new THREE.DirectionalLight('#fff9ef',2.6);key.position.set(-5,12,7);
   key.castShadow=true;key.shadow.mapSize.set(4096,4096);
   Object.assign(key.shadow.camera,{left:-17,right:17,top:20,bottom:-20,near:.1,far:45});
-  key.shadow.bias=-.0002;key.shadow.normalBias=.006;key.shadow.radius=4;scene.add(key);
+  key.shadow.bias=-.00002;key.shadow.normalBias=.006;key.shadow.radius=4;scene.add(key);
   const fill=new THREE.DirectionalLight('#e6ecf4',.75);fill.position.set(4,4,-5);scene.add(fill);
 
   function canvasTexture(canvas,color=true){
@@ -75,16 +76,22 @@ try{
     return canvasTexture(canvas);
   }
   const paperTextures=new Map();
-  function paperTexture(type){
-    if(paperTextures.has(type))return paperTextures.get(type);
-    const c=document.createElement('canvas');c.width=512;c.height=640;
+  function paperTexture(type,color){
+    const key=`${type}:${color}`;
+    if(paperTextures.has(key))return paperTextures.get(key);
+    const hex=PAPER_COLORS[color].hex.slice(1),rgb=[0,2,4].map(offset=>parseInt(hex.slice(offset,offset+2),16)),dark=color!=='ivory';
+    const c=document.createElement('canvas');c.width=1024;c.height=1280;
     const x=c.getContext('2d'),data=x.createImageData(c.width,c.height),rnd=random(61);
-    for(let i=0;i<data.data.length;i+=4){const n=(rnd()-.5)*8;data.data[i]=238+n;data.data[i+1]=234+n;data.data[i+2]=221+n;data.data[i+3]=255;}
+    for(let i=0;i<data.data.length;i+=4){const n=(rnd()-.5)*4;data.data[i]=rgb[0]+n;data.data[i+1]=rgb[1]+n;data.data[i+2]=rgb[2]+n;data.data[i+3]=255;}
     x.putImageData(data,0,0);
-    x.strokeStyle='#8b8e82';x.fillStyle='#797d70';x.lineWidth=2.2;
+    x.scale(2,2);
+    x.strokeStyle=dark?'rgba(238,238,238,.48)':'rgba(105,110,96,.45)';x.fillStyle=dark?'rgba(238,238,238,.65)':'rgba(105,110,96,.65)';x.lineWidth=.9;
     if(type==='lined')for(let y=55;y<600;y+=34){x.beginPath();x.moveTo(30,y);x.lineTo(482,y);x.stroke();}
-    if(type==='dotted')for(let y=45;y<605;y+=29)for(let px=32;px<485;px+=29){x.beginPath();x.arc(px,y,3.2,0,Math.PI*2);x.fill();}
-    const texture=canvasTexture(c);paperTextures.set(type,texture);return texture;
+    if(type==='dotted')for(let y=45;y<605;y+=29)for(let px=32;px<485;px+=29){x.beginPath();x.arc(px,y,1.5,0,Math.PI*2);x.fill();}
+    // A soft crease gives depth without shadow-map speckling between thin leaves.
+    const crease=x.createLinearGradient(0,0,34,0);crease.addColorStop(0,'rgba(24,20,16,.14)');crease.addColorStop(1,'rgba(24,20,16,0)');
+    x.fillStyle=crease;x.fillRect(0,0,34,640);
+    const texture=canvasTexture(c);paperTextures.set(key,texture);return texture;
   }
   function paperBend(x,z){
     const edge=Math.pow(THREE.MathUtils.clamp((x+W/2)/W,0,1),1.8);
@@ -98,7 +105,7 @@ try{
   }
   function sheet(width,length,thickness,radius,flexibleCover=false){
     // Subdivided paper faces bend together; there is no rigid beveled board.
-    const nx=flexibleCover?40:18,nz=flexibleCover?64:36,row=nx+1;
+    const nx=40,nz=flexibleCover?64:36,row=nx+1;
     const p=[],uv=[],indices=[],foldRadius=.012;
     const inset=(r,d)=>d<r?r-Math.sqrt(Math.max(0,r*r-(r-d)**2)):0;
     for(const side of [1,-1])for(let j=0;j<=nz;j++){
@@ -108,7 +115,7 @@ try{
       const d=length/2-Math.abs(z);
       const left=-width/2+inset(foldRadius,d),right=width/2-inset(radius,d);
       for(let i=0;i<=nx;i++){
-        const x=THREE.MathUtils.lerp(left,right,i/nx);
+        const x=THREE.MathUtils.lerp(left,right,Math.pow(i/nx,1.35));
         p.push(x,paperBend(x+FOLD/2,z)+side*thickness/2,z);uv.push(x/width+.5,.5-z/length);
       }
     }
@@ -129,13 +136,16 @@ try{
     }
     const g=keep('geometries',new THREE.BufferGeometry());
     g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(indices);g.computeVertexNormals();
-    if(flexibleCover){
-      const curled=p.slice();
-      for(let i=0;i<curled.length;i+=3)curled[i+1]+=coverCurl(curled[i]+FOLD/2,curled[i+2]);
-      g.morphAttributes.position=[new THREE.Float32BufferAttribute(curled,3)];
-      const bent=g.clone();bent.morphAttributes={};bent.setAttribute('position',new THREE.Float32BufferAttribute(curled,3));bent.computeVertexNormals();
-      g.morphAttributes.normal=[bent.attributes.normal.clone()];bent.dispose();
-    }
+    const targets=(flexibleCover?[1]:[1,-1]).map(sign=>{
+      const curved=p.slice();
+      for(let i=0;i<curved.length;i+=3)curved[i+1]+=flexibleCover?coverCurl(curved[i]+FOLD/2,curved[i+2]):sign*pageArch(curved[i]+width/2,width,curved[i+2]);
+      return new THREE.Float32BufferAttribute(curved,3);
+    });
+    const normals=targets.map(positions=>{
+      const bent=g.clone();bent.morphAttributes={};bent.setAttribute('position',positions);bent.computeVertexNormals();
+      const normal=bent.attributes.normal.clone();bent.dispose();return normal;
+    });
+    g.morphAttributes.position=targets;g.morphAttributes.normal=normals;
     return g;
   }
   function mesh(geometry,material,parent){
@@ -162,7 +172,8 @@ try{
     const slot=[1,0,2][i];
     const kraftMap=kraftTexture(i);
     const cover=keep('materials',new THREE.MeshStandardMaterial({map:kraftMap,bumpMap:kraftMap,bumpScale:.003,roughness:.96,metalness:0}));
-    const pageMaterial=keep('materials',new THREE.MeshStandardMaterial({map:paperTexture(configurator.getState().books[slot]),roughness:1}));
+    const initial=configurator.getState();
+    const pageMaterial=keep('materials',new THREE.MeshStandardMaterial({map:paperTexture(initial.books[slot],initial.colors[slot]),roughness:1}));
     mesh(coverGeometry,cover,book).position.set(FOLD/2,COVER/2,0);
     // A common fold line keeps every leaf attached to its saddle-stitched spine.
     const foldX=-W/2+FOLD,foldY=H/2;
@@ -170,27 +181,29 @@ try{
     const coverPivot=hinge();
     const topCover=mesh(coverGeometry,cover,coverPivot);topCover.position.set(FOLD/2-foldX,H-COVER/2-foldY,0);
     topCover.morphTargetInfluences[0]=i===2?1:0;
-    const turningPages=[],rnd=random(322+i);
+    const turningPages=[],restingPages=[],rnd=random(322+i);
     for(let j=0;j<PAGE_LAYERS;j++){
       const moving=j>=PAGE_LAYERS/2,pivot=moving?hinge():book;
       const page=mesh(pageGeometry,pageMaterial,pivot);
+      page.receiveShadow=false;
       page.position.set(FOLD/2+(rnd()-.5)*.0015-(moving?foldX:0),COVER+.002+(j+.5)*PAGE_STEP-(moving?foldY:0),(rnd()-.5)*.002);
       page.rotation.y=(rnd()-.5)*.0015;
-      if(moving)turningPages.push({pivot,lag:(PAGE_LAYERS-1-j)/(PAGE_LAYERS/2-1)});
+      if(moving)turningPages.push({pivot,page,lag:(PAGE_LAYERS-1-j)/(PAGE_LAYERS/2-1)});
+      else restingPages.push(page);
     }
     makeSpine(cover,book);
     const stack=new THREE.Vector3([-.014,.006,0][i],BASE+i*(H+GAP),[.012,-.008,0][i]);
     book.userData.bookSlot=slot;
-    books.push({book,topCover,coverPivot,turningPages,pageMaterial,stack,slot,selectionLift:0,rotation:[-.007,.009,-.003][i]});
+    books.push({book,topCover,coverPivot,turningPages,restingPages,pageMaterial,stack,slot,rotation:[-.007,.009,-.003][i]});
     book.position.copy(stack);book.rotation.y=books[i].rotation;
   }
   function updatePaperChoices(state){
     for(const item of books){
-      const type=state.books[item.slot];
-      if(item.paperType===type)continue;
-      item.paperType=type;item.pageMaterial.map=paperTexture(type);item.pageMaterial.needsUpdate=true;
+      const type=state.books[item.slot],color=state.colors[item.slot];
+      if(item.paperType===type&&item.paperColor===color)continue;
+      item.paperType=type;item.paperColor=color;item.pageMaterial.map=paperTexture(type,color);item.pageMaterial.needsUpdate=true;
     }
-    stage.setAttribute('aria-label','Interactive 3D refill pack. '+state.books.map((type,i)=>`Book ${i+1}: ${type} ivory pages`).join('. ')+'. Choose a book to untie the pack and open all three. Drag or use arrow keys to rotate.');
+    stage.setAttribute('aria-label','Interactive 3D refill pack. '+state.books.map((type,i)=>`Book ${i+1}: ${type} ${PAPER_COLORS[state.colors[i]].label.toLowerCase()} pages`).join('. ')+`. Choose a book to untie the pack and bring its open pages into focus. Book ${state.activeBook+1} selected. Drag or use arrow keys to rotate.`);
   }
   updatePaperChoices(configurator.getState());
 
@@ -279,53 +292,72 @@ try{
   }
   const contactShadows=books.map(()=>contactShadow());
 
-  // One ground outline follows the selected physical booklet. The text labels
-  // are real buttons, giving the 3D picks an equivalent keyboard/touch control.
-  const outlineShape=new THREE.Shape(),ow=W+.11,ol=L/2+.11,r=.15;
-  outlineShape.moveTo(-ow+r,-ol);outlineShape.lineTo(ow-r,-ol);outlineShape.quadraticCurveTo(ow,-ol,ow,-ol+r);
-  outlineShape.lineTo(ow,ol-r);outlineShape.quadraticCurveTo(ow,ol,ow-r,ol);outlineShape.lineTo(-ow+r,ol);
-  outlineShape.quadraticCurveTo(-ow,ol,-ow,ol-r);outlineShape.lineTo(-ow,-ol+r);outlineShape.quadraticCurveTo(-ow,-ol,-ow+r,-ol);
-  const outlinePoints=outlineShape.getPoints(10).map(p=>new THREE.Vector3(p.x,.008,p.y));
-  const selectionOutline=new THREE.LineLoop(keep('geometries',new THREE.BufferGeometry().setFromPoints(outlinePoints)),keep('materials',new THREE.LineBasicMaterial({color:'#6b7357'})));
-  scene.add(selectionOutline);selectionOutline.visible=false;
-  const labels=scope.querySelector('#refill-labels'),labelButtons=[...labels.querySelectorAll('button')],labelPosition=new THREE.Vector3();
+  // Stable, sharp booklet thumbnails stay usable while the camera moves.
+  const labels=scope.querySelector('#refill-labels');
   let selectedBook=configurator.getState().activeBook;
 
   let view='pack',unpack=0,goalUnpack=0,cameraMoving=false,autoFrame=true,disposed=false,active=true;
   let lastPhase='',lastBusy=false,inView=true;
   const goalPosition=new THREE.Vector3(),goalTarget=new THREE.Vector3(0,.21,0);
+  const slide={active:false,target:new THREE.Vector3(),offset:new THREE.Vector3(),velocity:new THREE.Vector3(),frequency:7.5};
+  function stopSlide(){slide.active=false;slide.velocity.set(0,0,0);stage.dataset.cameraMotion='idle';}
   const homeDirection=new THREE.Vector3(4.8,6.4,7.8).normalize();
-  const readingDirection=new THREE.Vector3(.06,1,.27).normalize();
+  const readingDirection=new THREE.Vector3(0,1,.24).normalize();
   function frame(immediate=false){
     const aspect=Math.max(.1,stage.clientWidth/stage.clientHeight);
     const tangent=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
     const motion=unpackMotion(unpack),layout=motion.camera,portrait=compactLayout.matches;
-    const halfWidth=THREE.MathUtils.lerp(W/2+.18,portrait?W+2.7:W+8.65+.3,layout);
+    const halfWidth=THREE.MathUtils.lerp(W/2+.18,portrait?W+2.7:W+12+.3,layout);
     const minZ=THREE.MathUtils.lerp(-L/2-.22,-5.25,ramp(unpack,.2,.53))-1.5*Math.sin(Math.PI*ramp(unpack,.24,.6));
-    const maxZ=THREE.MathUtils.lerp(L/2+.22,portrait?11.8+L/2+.85:L/2+.85,layout);
+    const maxZ=THREE.MathUtils.lerp(L/2+.22,portrait?18+L/2+.85:L/2+.85,layout);
     // While opening, a leaf reaches four inches above the spine. Include that
     // arc in the fit so the cover never clips through the edge of the viewport.
     const leafHeight=Math.max(...motion.openProgress.map(p=>W*Math.sin(Math.PI*p)));
     const modelHeight=Math.max(THREE.MathUtils.lerp(top+.22,H+.25,layout),leafHeight+.2);
     const finalMinZ=portrait?-L/2-.4:minZ;
     const fitMinZ=THREE.MathUtils.lerp(minZ,finalMinZ,motion.pageCamera);
-    goalTarget.set(0,modelHeight/2,(fitMinZ+maxZ)/2);
+    const focus=ramp(unpack,.78,1),selected=bookletLayout(selectedBook,portrait);
+    const centerX=selected.x-W/2;
+    const minX=THREE.MathUtils.lerp(-halfWidth,centerX-W-.28,focus);
+    const maxX=THREE.MathUtils.lerp(halfWidth,centerX+W+.28,focus);
+    const focusMinZ=THREE.MathUtils.lerp(fitMinZ,selected.z-L/2-.22,focus);
+    const focusMaxZ=THREE.MathUtils.lerp(maxZ,selected.z+L/2+.22,focus);
+    goalTarget.set((minX+maxX)/2,modelHeight/2,(focusMinZ+focusMaxZ)/2);
     const direction=homeDirection.clone().lerp(readingDirection,motion.pageCamera).normalize();
     const right=new THREE.Vector3(direction.z,0,-direction.x).normalize();
     const up=new THREE.Vector3().crossVectors(direction,right).normalize();
     let fit=0;
-    for(const x of [-halfWidth,halfWidth])for(const y of [0,modelHeight])for(const z of [fitMinZ,maxZ]){
+    for(const x of [minX,maxX])for(const y of [0,modelHeight])for(const z of [focusMinZ,focusMaxZ]){
       const corner=new THREE.Vector3(x,y,z).sub(goalTarget),depth=corner.dot(direction);
       fit=Math.max(fit,Math.abs(corner.dot(right))/(tangent*aspect)+depth,Math.abs(corner.dot(up))/tangent+depth);
     }
-    const distance=fit*THREE.MathUtils.lerp(1.32,1.07,motion.pageCamera);
-    controls.maxDistance=Math.max(17,distance*1.5);
+    const packPadding=stage.clientWidth<500?1.22:1.16;
+    const distance=fit*THREE.MathUtils.lerp(packPadding,1.07,motion.pageCamera);
+    const currentDistance=camera.position.distanceTo(controls.target);
+    controls.maxDistance=Math.max(17,distance*1.5,currentDistance*1.1);
+    // The untie sequence needs a wider camera range than the individual view.
+    const far=Math.max(80,distance*2,currentDistance*2);
+    if(camera.far!==far){camera.far=far;camera.updateProjectionMatrix();}
     goalPosition.copy(direction).multiplyScalar(distance).add(goalTarget);
     cameraMoving=true;
-    if(immediate){camera.position.copy(goalPosition);controls.target.copy(goalTarget);camera.lookAt(controls.target);controls.update();cameraMoving=false;}
+    if(immediate){stopSlide();camera.position.copy(goalPosition);controls.target.copy(goalTarget);camera.lookAt(controls.target);controls.update();cameraMoving=false;}
+  }
+  function slideToBook(){
+    if(reducedMotion.matches){frame(true);return;}
+    // Clear any residual orbit damping without changing the visible pose.
+    const position=camera.position.clone(),target=controls.target.clone();
+    controls.enableDamping=false;controls.update();
+    camera.position.copy(position);controls.target.copy(target);controls.update();controls.enableDamping=true;
+    if(!slide.active)slide.velocity.set(0,0,0);
+    slide.offset.copy(camera.position).sub(controls.target);
+    frame();slide.target.copy(goalTarget);
+    const spacing=compactLayout.matches?9:12,trips=controls.target.distanceTo(slide.target)/spacing;
+    slide.frequency=7.5/(1+Math.max(0,trips-1)*.2);
+    slide.active=true;cameraMoving=false;stage.dataset.cameraMotion='sliding';
   }
   function setView(next){
     if(!['pack','booklets'].includes(next))return;
+    stopSlide();
     view=next;goalUnpack=next==='booklets'?1:0;
     scope.dataset.refillLayout=view;
     autoFrame=true;lastPhase='';
@@ -334,9 +366,11 @@ try{
     frame(reducedMotion.matches);
   }
   const unsubscribeConfig=configurator.subscribe(state=>{
-    const {activeBook,reason}=state;selectedBook=activeBook;updatePaperChoices(state);
+    const {activeBook,reason}=state,changed=selectedBook!==activeBook;
+    selectedBook=activeBook;updatePaperChoices(state);
     if(reason==='review')setView('pack');
     else if(view!=='booklets'||goalUnpack!==1)setView('booklets');
+    else if(changed){autoFrame=true;if(unpack===1)slideToBook();else frame(reducedMotion.matches);}
   });
   const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
   let pointerStart=null,hoveredBook=null,pointerDirty=false,pointerInside=false;
@@ -347,7 +381,7 @@ try{
   function pickBook(){
     if(unpack<.999||goalUnpack!==1)return null;
     raycaster.setFromCamera(pointer,camera);
-    const hit=raycaster.intersectObjects(books.map(({book})=>book),true)[0];
+    const hit=raycaster.intersectObjects(books.map(({book})=>book).filter(book=>book.visible),true)[0];
     if(!hit)return null;let object=hit.object;
     while(object&&object.userData.bookSlot===undefined)object=object.parent;
     return object?.userData.bookSlot??null;
@@ -362,10 +396,10 @@ try{
   renderer.domElement.addEventListener('pointercancel',()=>pointerStart=null);
   scope.querySelectorAll('[data-refill-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.refillView)));
   scope.querySelector('#refill-reset').addEventListener('click',()=>setView('pack'));
-  controls.addEventListener('start',()=>{cameraMoving=false;autoFrame=false;});
+  controls.addEventListener('start',()=>{stopSlide();cameraMoving=false;autoFrame=false;});
   stage.addEventListener('keydown',event=>{
     if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key))return;
-    event.preventDefault();cameraMoving=false;autoFrame=false;
+    event.preventDefault();stopSlide();cameraMoving=false;autoFrame=false;
     const s=new THREE.Spherical().setFromVector3(camera.position.clone().sub(controls.target));
     if(event.key==='ArrowLeft')s.theta-=.12;if(event.key==='ArrowRight')s.theta+=.12;
     if(event.key==='ArrowUp')s.phi=Math.max(.025,s.phi-.12);if(event.key==='ArrowDown')s.phi=Math.min(Math.PI*.49,s.phi+.12);
@@ -374,6 +408,7 @@ try{
   function resize(){
     controls.enableZoom=false;
     renderer.domElement.style.touchAction=compactLayout.matches?'pan-y pinch-zoom':'none';
+    renderer.setPixelRatio(Math.max(2,Math.min(devicePixelRatio,2.5)));
     renderer.setSize(stage.clientWidth,stage.clientHeight,false);camera.aspect=stage.clientWidth/stage.clientHeight;camera.updateProjectionMatrix();frame(true);lastPhase='';
   }
   const resizeObserver=new ResizeObserver(resize);resizeObserver.observe(stage);
@@ -387,55 +422,59 @@ try{
     const previousUnpack=unpack;
     const step=reducedMotion.matches?1:delta/UNPACK_SECONDS;
     unpack+=Math.sign(goalUnpack-unpack)*Math.min(Math.abs(goalUnpack-unpack),step);
-    const motion=unpackMotion(unpack),busy=unpack!==goalUnpack;
+    const motion=unpackMotion(unpack),busy=unpack!==goalUnpack||slide.active;
     if(previousUnpack!==unpack&&autoFrame)frame();
     if(lastBusy!==busy){stage.setAttribute('aria-busy',String(busy));lastBusy=busy;}
     if(lastPhase!==motion.phase){
       stage.dataset.phase=motion.phase;lastPhase=motion.phase;
       const copy=goalUnpack===1?{'loosening':'Loosening the tie…','unwrapping':'Pulling the tie free…','setting-tie-down':'Setting the tie aside…','laying-out':'Laying out the booklets…','opening':'Opening your pages…'}:{'loosening':'Finishing the knot…','unwrapping':'Wrapping the stack…','setting-tie-down':'Picking up the tie…','laying-out':'Stacking the booklets…','opening':'Closing the booklets…'};
-      scope.querySelector('#refill-view-status').textContent=copy[motion.phase]||(motion.phase==='open'?'Select a book to choose its pages':compactLayout.matches?'Drag sideways to rotate':'Drag to explore');
+      const status=scope.querySelector('#refill-view-status');
+      status.textContent=copy[motion.phase]||(motion.phase==='open'?'':compactLayout.matches?'Drag sideways to rotate':'Drag to explore');
+      status.parentElement.hidden=!status.textContent;
     }
     const canSelect=unpack===1&&goalUnpack===1;
-    labels.hidden=!canSelect;selectionOutline.visible=canSelect;
+    labels.hidden=!canSelect;
     books.forEach((item,i)=>{
-      const {book,topCover,coverPivot,turningPages,stack,rotation,slot}=item;
+      const {book,topCover,coverPivot,turningPages,restingPages,stack,rotation,slot}=item;
       const progress=motion.bookProgress[i],opening=motion.openProgress[i];
       const layout=bookletLayout(slot,compactLayout.matches);
       const position=new THREE.Vector3(layout.x,.006,layout.z);
       book.position.lerpVectors(stack,position,progress);
       book.position.y-=(BASE-.006)*motion.settle*(1-progress);
       book.position.y+=Math.sin(progress*Math.PI)*.42+.05*opening;
-      item.selectionLift=THREE.MathUtils.lerp(item.selectionLift,canSelect&&slot===selectedBook ? .10 : 0,ease);
-      book.position.y+=item.selectionLift;
       book.rotation.y=THREE.MathUtils.lerp(rotation,[-.012,0,.012][slot],progress);
       book.rotation.z=Math.sin(progress*Math.PI)*(i===2?-.045:.04);
       coverPivot.rotation.z=Math.PI*ramp(opening,0,.82);
-      for(const {pivot,lag} of turningPages)pivot.rotation.z=Math.PI*ramp(opening,.04+lag*.1,.86+lag*.14);
+      const curl=ramp(opening,.25,.95);
+      for(const page of restingPages)page.morphTargetInfluences[0]=curl;
+      for(const {pivot,page,lag} of turningPages){
+        const angle=Math.PI*ramp(opening,.04+lag*.1,.86+lag*.14);
+        pivot.rotation.z=angle;
+        // The turned half exposes its underside: reverse the local bend so
+        // both sides of the finished spread arch upward beside the binding.
+        page.morphTargetInfluences[0]=curl*Math.max(0,Math.cos(angle));
+        page.morphTargetInfluences[1]=curl*Math.max(0,-Math.cos(angle));
+      }
       topCover.morphTargetInfluences[0]=(i===2?1:motion.settle)*(1-opening);
       contactShadows[i].position.x=book.position.x-W/2*opening;
       contactShadows[i].position.z=book.position.z;contactShadows[i].scale.x=1+opening*.8;
       contactShadows[i].material.opacity=i===0?1:progress*.7;
-      if(canSelect&&slot===selectedBook){
-        book.updateMatrixWorld(true);
-        selectionOutline.position.copy(book.localToWorld(new THREE.Vector3(-W/2+FOLD,-book.position.y+.008,0)));
-        selectionOutline.rotation.y=book.rotation.y;
-      }
     });
     cordMotion.update(motion.cordTime);
-    if(cameraMoving){camera.position.lerp(goalPosition,ease);controls.target.lerp(goalTarget,ease);if(camera.position.distanceTo(goalPosition)<.001)cameraMoving=false;}
-    controls.update();
-    if(pointerInside&&(pointerDirty||cameraMoving)){
-      hoveredBook=pickBook();stage.style.cursor=hoveredBook===null?'grab':'pointer';pointerDirty=false;
-    }
-    if(canSelect){
-      // Project from the booklet's front edge into the viewer's CSS coordinates.
-      const width=stage.clientWidth,height=stage.clientHeight;
-      for(const {book,slot} of books){
-        labelPosition.set(compactLayout.matches?W/2+1.35:-W/2+FOLD,0,compactLayout.matches?0:L/2+.43).applyMatrix4(book.matrixWorld).project(camera);
-        const x=(labelPosition.x*.5+.5)*width+stage.offsetLeft,y=(-labelPosition.y*.5+.5)*height+stage.offsetTop;
-        labelButtons[slot].style.transform=`translate(${x}px,${y}px) translate(-50%,-50%)`;
-        labelButtons[slot].hidden=labelPosition.z>1||x<10||x>width-10;
+    cordGroup.position.z=-3*ramp(unpack,.82,1);
+    const wasSliding=slide.active;
+    if(slide.active){
+      if(reducedMotion.matches){controls.target.copy(slide.target);stopSlide();}
+      else for(const axis of ['x','y','z']){
+        const next=slideStep(controls.target[axis],slide.velocity[axis],slide.target[axis],delta,slide.frequency);
+        controls.target[axis]=next.position;slide.velocity[axis]=next.velocity;
       }
+      if(controls.target.distanceTo(slide.target)<.002&&slide.velocity.length()<.01){controls.target.copy(slide.target);stopSlide();}
+      camera.position.copy(controls.target).add(slide.offset);
+    }else if(cameraMoving){camera.position.lerp(goalPosition,ease);controls.target.lerp(goalTarget,ease);if(camera.position.distanceTo(goalPosition)<.001)cameraMoving=false;}
+    controls.update();
+    if(pointerInside&&(pointerDirty||cameraMoving||wasSliding)){
+      hoveredBook=pickBook();stage.style.cursor=hoveredBook===null?'grab':'pointer';pointerDirty=false;
     }
     renderer.render(scene,camera);
   });

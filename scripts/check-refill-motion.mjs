@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {unpackMotion,bookletLayout,UNPACK_SECONDS} from '../refill/motion.mjs';
+import {unpackMotion,bookletLayout,pageArch,UNPACK_SECONDS} from '../refill/motion.mjs';
 
 assert(UNPACK_SECONDS<5,'The opening sequence should stay quick');
 assert.deepEqual(unpackMotion(0).openProgress,[0,0,0]);
@@ -25,4 +25,16 @@ for(const compact of [false,true]){
   const positions=[0,1,2].map(slot=>bookletLayout(slot,compact));
   for(let i=1;i<3;i++)assert(compact?positions[i].z-positions[i-1].z>5:positions[i].x-positions[i-1].x>8,'Open spreads overlap');
 }
-console.log('Opening starts after the tie clears and each book is separated; all spreads fit without overlap.');
+for(const z of [-2.5,0,2.5]){
+  assert.equal(pageArch(0,4,z),0,'The leaf must stay attached to its spine');
+  assert.equal(pageArch(4,4,z),0,'The outer edge should settle back down');
+  assert(pageArch(.42,4,z)>.14,'The arch should be visible beside the binding');
+  assert(pageArch(2,4,z)<.02,'The arch should relax across the rest of the page');
+  let height=0;
+  for(let step=1;step<=400;step++){
+    const next=pageArch(step/100,4,z);
+    assert(next>=0&&next<=.161,'The page curl should stay subtle and above the base plane');
+    assert(Math.abs(next-height)<.012,'The surface should bend continuously');height=next;
+  }
+}
+console.log('Opening stays continuous after the tie clears; spread spacing and spine-attached page curves pass.');
